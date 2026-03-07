@@ -20,6 +20,10 @@ const Navbar = () => {
         <li>
           <Link to="/news" style={styles.link}>News</Link>
         </li>
+        {/* ADDED COMMITTEE LINK HERE */}
+        <li>
+          <Link to="/committee" style={styles.link}>Committee</Link>
+        </li>
         <li>
           <Link to="/admin" style={styles.adminLink}>Admin</Link>
         </li>
@@ -38,6 +42,9 @@ const styles = {
     backgroundColor: '#001f3f', // Navy Blue
     color: 'white',
     boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
+    position: 'sticky', // Keeps it at the top while scrolling
+    top: 0,
+    zIndex: 1000
   },
   logo: {
     fontSize: '1.5rem',
@@ -52,6 +59,8 @@ const styles = {
     listStyle: 'none',
     gap: '25px',
     alignItems: 'center',
+    margin: 0,
+    padding: 0
   },
   link: {
     color: 'white',

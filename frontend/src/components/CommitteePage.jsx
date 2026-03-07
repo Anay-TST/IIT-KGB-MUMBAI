@@ -1,58 +1,87 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api, { BACKEND_URL } from '../api';
 
 const CommitteePage = () => {
   const [committee, setCommittee] = useState([]);
-  const BACKEND_URL = 'http://localhost:5000'; 
   const defaultAvatar = 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
 
   useEffect(() => {
-    axios.get(`${BACKEND_URL}/api/committee`).then(res => setCommittee(res.data));
+    // Fetch committee data from backend
+    api.get('/api/committee')
+      .then(res => setCommittee(res.data))
+      .catch(err => console.error("Error fetching committee:", err));
   }, []);
 
   return (
-    <div style={{ padding: '50px 20px', maxWidth: '1200px', margin: '0 auto', textAlign: 'center' }}>
-      <h1 style={{ color: '#003366', marginBottom: '10px' }}>Executive Committee</h1>
-      <p style={{ color: '#666', marginBottom: '40px' }}>Leading the IIT KGP Mumbai Alumni Chapter</p>
+    <div style={{ padding: '50px 20px', maxWidth: '1200px', margin: '0 auto', textAlign: 'center', fontFamily: 'sans-serif' }}>
+      <h1 style={{ color: '#003366', marginBottom: '10px', fontSize: '2.5rem' }}>Executive Committee</h1>
+      <p style={{ color: '#666', marginBottom: '50px', fontSize: '1.1rem' }}>The dedicated team leading the IIT KGP Mumbai Alumni Chapter</p>
       
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '30px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '40px' }}>
         {committee.map(c => (
           <div key={c._id} style={cardStyle}>
-            <img 
-              src={c.member?.profilePic ? `${BACKEND_URL}${c.member.profilePic}` : defaultAvatar} 
-              alt="Committee Member"
-              style={imgStyle}
-            />
-            <h3 style={{ margin: '15px 0 5px 0', color: '#003366' }}>
+            <div style={imgContainer}>
+              <img 
+                src={c.member?.profilePic ? `${BACKEND_URL}${c.member.profilePic}` : defaultAvatar} 
+                alt="Committee Member"
+                style={imgStyle}
+                onError={(e) => e.target.src = defaultAvatar}
+              />
+            </div>
+            <h3 style={{ margin: '15px 0 5px 0', color: '#003366', fontSize: '1.4rem' }}>
               {c.member?.firstName} {c.member?.lastName}
             </h3>
-            <p style={{ color: '#d4af37', fontWeight: 'bold', margin: '0 0 10px 0', textTransform: 'uppercase', fontSize: '14px' }}>
-              {c.title}
-            </p>
-            <p style={{ color: '#888', fontSize: '13px' }}>
+            <div style={titleBadge}>{c.title}</div>
+            <p style={{ color: '#777', fontSize: '0.9rem', marginTop: '10px' }}>
               Batch of {c.member?.yearOfGraduation} | {c.member?.hall}
             </p>
           </div>
         ))}
       </div>
+
+      {committee.length === 0 && (
+        <p style={{ color: '#999', marginTop: '40px' }}>No committee members assigned yet.</p>
+      )}
     </div>
   );
 };
 
+// --- STYLES ---
 const cardStyle = {
   backgroundColor: '#fff',
-  padding: '30px',
-  borderRadius: '15px',
-  boxShadow: '0 10px 25px rgba(0,0,0,0.05)',
-  transition: 'transform 0.3s'
+  padding: '40px 20px',
+  borderRadius: '20px',
+  boxShadow: '0 15px 35px rgba(0,0,0,0.05)',
+  border: '1px solid #f0f0f0',
+  transition: 'transform 0.3s ease'
+};
+
+const imgContainer = {
+  width: '140px',
+  height: '140px',
+  margin: '0 auto 20px auto',
+  borderRadius: '50%',
+  padding: '5px',
+  border: '2px dashed #d4af37' // Gold border for committee members
 };
 
 const imgStyle = {
-  width: '120px',
-  height: '120px',
+  width: '100%',
+  height: '100%',
   borderRadius: '50%',
-  objectFit: 'cover',
-  border: '4px solid #f0f4f8'
+  objectFit: 'cover'
+};
+
+const titleBadge = {
+  display: 'inline-block',
+  backgroundColor: '#fdf6e3',
+  color: '#b58900',
+  padding: '5px 15px',
+  borderRadius: '20px',
+  fontSize: '0.85rem',
+  fontWeight: 'bold',
+  textTransform: 'uppercase',
+  letterSpacing: '1px'
 };
 
 export default CommitteePage;

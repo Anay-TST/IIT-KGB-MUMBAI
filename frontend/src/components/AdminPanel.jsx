@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api, { BACKEND_URL } from '../api';
 
 const AdminPanel = () => {
   // --- AUTH & TAB STATE ---
   const [auth, setAuth] = useState(false);
   const [pass, setPass] = useState('');
-  const [activeTab, setActiveTab] = useState('members'); // 'members' or 'committee'
+  const [activeTab, setActiveTab] = useState('members'); 
 
   // --- DATA STATE ---
   const [members, setMembers] = useState([]);
@@ -20,15 +20,15 @@ const AdminPanel = () => {
   const [selectedMemberId, setSelectedMemberId] = useState('');
   const [committeeTitle, setCommitteeTitle] = useState('');
 
-  const BACKEND_URL = 'http://localhost:5000'; 
   const defaultAvatar = 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
 
   // --- DATA FETCHING ---
   const fetchAll = async () => {
     try {
+      // Using 'api' instance automatically prepends the Codespace/Localhost URL
       const [memRes, commRes] = await Promise.all([
-        axios.get(`${BACKEND_URL}/api/alumni/all`),
-        axios.get(`${BACKEND_URL}/api/committee`)
+        api.get('/api/alumni/all'),
+        api.get('/api/committee')
       ]);
       setMembers(memRes.data);
       setCommittee(commRes.data);
@@ -44,22 +44,20 @@ const AdminPanel = () => {
   };
 
   // --- MEMBER ACTIONS ---
-  const action = (id, act) => axios.patch(`${BACKEND_URL}/api/alumni/status/${id}?action=${act}`).then(fetchAll);
+  const action = (id, act) => api.patch(`/api/alumni/status/${id}?action=${act}`).then(fetchAll);
   
-  const del = (id) => window.confirm("Delete permanently?") && axios.delete(`${BACKEND_URL}/api/alumni/${id}`).then(fetchAll);
+  const del = (id) => window.confirm("Delete permanently?") && api.delete(`/api/alumni/${id}`).then(fetchAll);
   
   const saveFullEdit = async () => {
     try {
       const formData = new FormData();
       Object.keys(editData).forEach(key => {
-        if (key === 'profilePic') return;
+        if (key === 'profilePic' || key === '_id' || key === '__v' || key === 'createdAt') return;
         let value = editData[key];
 
-        // Sanitize Dates
         const dateFields = ['birthdate', 'anniversaryDate', 'spouseBirthdate'];
         if (dateFields.includes(key) && (!value || value === "")) return;
 
-        // Sanitize Numbers
         if (key === 'numberOfChildren' || key === 'yearOfGraduation') {
           value = value === "" ? 0 : Number(value);
         }
@@ -70,7 +68,7 @@ const AdminPanel = () => {
 
       if (newPic) formData.append('profilePic', newPic);
 
-      await axios.put(`${BACKEND_URL}/api/alumni/${editData._id}`, formData, {
+      await api.put(`/api/alumni/${editData._id}`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
@@ -89,7 +87,7 @@ const AdminPanel = () => {
     e.preventDefault();
     if(!selectedMemberId || !committeeTitle) return alert("Select member and provide title");
     try {
-      await axios.post(`${BACKEND_URL}/api/committee`, { 
+      await api.post('/api/committee', { 
         memberId: selectedMemberId, 
         title: committeeTitle 
       });
@@ -104,12 +102,11 @@ const AdminPanel = () => {
 
   const removeFromCommittee = async (id) => {
     if(window.confirm("Remove from committee?")) {
-      await axios.delete(`${BACKEND_URL}/api/committee/${id}`);
+      await api.delete(`/api/committee/${id}`);
       fetchAll();
     }
   };
 
-  // --- FILTERING ---
   const filteredMembers = members.filter(m => 
     `${m.firstName} ${m.lastName} ${m.email}`.toLowerCase().includes(search.toLowerCase())
   );
@@ -127,7 +124,6 @@ const AdminPanel = () => {
   return (
     <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f4f7f6' }}>
       
-      {/* --- SIDEBAR --- */}
       <div style={styles.sidebar}>
         <h3 style={{borderBottom: '1px solid #003366', paddingBottom: '10px'}}>Admin Dashboard</h3>
         <div 
@@ -145,10 +141,8 @@ const AdminPanel = () => {
         <div onClick={() => setAuth(false)} style={styles.logoutBtn}>🚪 Logout</div>
       </div>
 
-      {/* --- MAIN CONTENT --- */}
       <div style={{ flex: 1, padding: '30px', marginLeft: '220px' }}>
         
-        {/* TAB: MEMBERS MANAGEMENT */}
         {activeTab === 'members' && (
           <>
             <div style={styles.headerRow}>
@@ -193,7 +187,6 @@ const AdminPanel = () => {
           </>
         )}
 
-        {/* TAB: COMMITTEE MANAGEMENT */}
         {activeTab === 'committee' && (
           <>
             <h1>Committee Management</h1>
@@ -211,7 +204,7 @@ const AdminPanel = () => {
                   ))}
                 </select>
                 <input 
-                  placeholder="Title (e.g. President, Secretary)" 
+                  placeholder="Title (e.g. President)" 
                   value={committeeTitle} 
                   onChange={e => setCommitteeTitle(e.target.value)} 
                   style={{...styles.inputS, flex: 1}}
@@ -231,7 +224,7 @@ const AdminPanel = () => {
                       <td style={styles.td}>{c.member?.firstName} {c.member?.lastName}</td>
                       <td style={styles.td}><span style={{fontWeight: 'bold', color: '#003366'}}>{c.title}</span></td>
                       <td style={styles.td}>
-                        <button onClick={() => removeFromCommittee(c._id)} style={styles.btnDelete}>Remove from Committee</button>
+                        <button onClick={() => removeFromCommittee(c._id)} style={styles.btnDelete}>Remove</button>
                       </td>
                     </tr>
                   ))}
@@ -242,12 +235,11 @@ const AdminPanel = () => {
         )}
       </div>
 
-      {/* --- EDIT MEMBER MODAL --- */}
       {editData && (
         <div style={styles.modalOverlay}>
           <div style={styles.modalContent}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
-              <h2 style={{margin:0}}>Edit Profile: {editData.firstName}</h2>
+              <h2 style={{margin:0}}>Edit Profile</h2>
               <button onClick={() => setEditData(null)} style={{cursor:'pointer', border:'none', background:'none', fontSize:'24px'}}>✕</button>
             </div>
 
@@ -271,27 +263,6 @@ const AdminPanel = () => {
                 <div><label style={styles.label}>Mobile</label><input value={editData.mobile || ''} onChange={e => setEditData({...editData, mobile: e.target.value})} style={styles.inputS}/></div>
                 <div><label style={styles.label}>Birthdate</label><input type="date" value={editData.birthdate?.split('T')[0] || ''} onChange={e => setEditData({...editData, birthdate: e.target.value})} style={styles.inputS}/></div>
                 <div><label style={styles.label}>Sex</label><select value={editData.sex || ''} onChange={e => setEditData({...editData, sex: e.target.value})} style={styles.inputS}><option value="Male">Male</option><option value="Female">Female</option></select></div>
-                <div>
-                   <label style={styles.label}>Marital Status</label>
-                   <select value={editData.maritalStatus || ''} onChange={e => setEditData({...editData, maritalStatus: e.target.value})} style={styles.inputS}>
-                     <option value="Single">Single</option><option value="Married">Married</option>
-                     <option value="Divorced">Divorced</option><option value="Separated">Separated</option><option value="Widowed">Widowed</option>
-                   </select>
-                </div>
-              </div>
-
-              <h4 style={styles.secTitle}>Academic & Professional</h4>
-              <div style={styles.grid2}>
-                <div><label style={styles.label}>Batch Year</label><input value={editData.yearOfGraduation || ''} onChange={e => setEditData({...editData, yearOfGraduation: e.target.value})} style={styles.inputS}/></div>
-                <div><label style={styles.label}>Hall</label><input value={editData.hall || ''} onChange={e => setEditData({...editData, hall: e.target.value})} style={styles.inputS}/></div>
-                <div style={{gridColumn: 'span 2'}}><label style={styles.label}>Occupation</label><input value={editData.currentOccupation || ''} onChange={e => setEditData({...editData, currentOccupation: e.target.value})} style={styles.inputS}/></div>
-              </div>
-
-              <h4 style={styles.secTitle}>Family Details</h4>
-              <div style={styles.grid2}>
-                <div><label style={styles.label}>Spouse First Name</label><input value={editData.spouseFirstName || ''} onChange={e => setEditData({...editData, spouseFirstName: e.target.value})} style={styles.inputS}/></div>
-                <div><label style={styles.label}>Spouse Last Name</label><input value={editData.spouseLastName || ''} onChange={e => setEditData({...editData, spouseLastName: e.target.value})} style={styles.inputS}/></div>
-                <div><label style={styles.label}>Number of Kids</label><input type="number" value={editData.numberOfChildren || 0} onChange={e => setEditData({...editData, numberOfChildren: e.target.value})} style={styles.inputS}/></div>
               </div>
             </div>
 

@@ -6,14 +6,16 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      // This ensures only the local frontend React is used
+      // Prevents potential issues with multiple React instances
       'react': path.resolve(__dirname, 'node_modules/react'),
       'react-dom': path.resolve(__dirname, 'node_modules/react-dom'),
     },
   },
   server: {
     proxy: {
+      // Local development fallback
       '/api': 'http://localhost:5000',
+      '/uploads': 'http://localhost:5000',
     },
   },
 })

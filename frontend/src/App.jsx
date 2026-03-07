@@ -6,6 +6,7 @@ import Navbar from './components/Navbar';
 import HomePage from './components/HomePage';
 import MembersPage from './components/MembersPage';
 import MemberDirectory from './components/MemberDirectory';
+import CommitteePage from './components/CommitteePage';
 
 // Admin & Form Components
 import AddMember from './components/AddMember'; 
@@ -31,6 +32,7 @@ function App() {
           
           {/* Public Approved Members Directory */}
           <Route path="/directory" element={<MemberDirectory />} />
+          <Route path="/committee" element={<CommitteePage />} />
           <Route path="/committee" element={<CommitteePage />} />
           
           {/* News Page */}
