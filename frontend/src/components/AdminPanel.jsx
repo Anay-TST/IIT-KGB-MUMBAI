@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api, { BACKEND_URL } from '../api';
 
 const AdminPanel = () => {
+  // --- STATE ---
   const [auth, setAuth] = useState(false);
   const [pass, setPass] = useState('');
   const [activeTab, setActiveTab] = useState('members'); 
@@ -22,7 +23,9 @@ const AdminPanel = () => {
         api.get('/api/committee')
       ]);
       setMembers(memRes.data);
-      setCommittee(commRes.data);
+      // Sort committee by the 'order' field if it exists
+      const sortedComm = commRes.data.sort((a, b) => (a.order || 0) - (b.order || 0));
+      setCommittee(sortedComm);
     } catch (err) {
       console.error("Fetch Error:", err);
     }
@@ -34,48 +37,66 @@ const AdminPanel = () => {
     else alert('Wrong Password'); 
   };
 
+  // --- MEMBER ACTIONS ---
   const action = (id, act) => api.patch(`/api/alumni/status/${id}?action=${act}`).then(fetchAll);
   const del = (id) => window.confirm("Delete permanently?") && api.delete(`/api/alumni/${id}`).then(fetchAll);
   
   const saveFullEdit = async () => {
     try {
       const formData = new FormData();
-      
-      // Add a flag if the user explicitly removed the photo
-      if (editData.profilePic === "") {
-        formData.append('removePhoto', 'true');
-      }
-
+      if (editData.profilePic === "") formData.append('removePhoto', 'true');
       Object.keys(editData).forEach(key => {
         if (['profilePic', '_id', '__v', 'createdAt'].includes(key)) return;
-        
         let value = editData[key];
-
-        // Sanitize Dates
         const dateFields = ['birthdate', 'anniversaryDate', 'spouseBirthdate'];
         if (dateFields.includes(key) && (!value || value === "")) return;
-
-        // Sanitize Numbers
-        if (key === 'numberOfChildren' || key === 'yearOfGraduation') {
-          value = value === "" ? 0 : Number(value);
-        }
-
+        if (key === 'numberOfChildren' || key === 'yearOfGraduation') value = value === "" ? 0 : Number(value);
         if (value === null || value === undefined) return;
         formData.append(key, value);
       });
-
       if (newPic) formData.append('profilePic', newPic);
+      await api.put(`/api/alumni/${editData._id}`, formData);
+      setEditData(null); setNewPic(null); fetchAll();
+      alert("Updated Successfully!");
+    } catch (err) { alert("Update failed"); }
+  };
 
-      await api.put(`/api/alumni/${editData._id}`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+  // --- COMMITTEE ACTIONS ---
+  const addToCommittee = async (e) => {
+    e.preventDefault();
+    if(!selectedMemberId || !committeeTitle) return alert("Select member and provide title");
+    try {
+      await api.post('/api/committee', { 
+        memberId: selectedMemberId, 
+        title: committeeTitle,
+        order: committee.length // Add to the end
       });
+      setCommitteeTitle(''); setSelectedMemberId(''); fetchAll();
+    } catch (err) { alert("Error adding to committee"); }
+  };
 
-      setEditData(null);
-      setNewPic(null);
-      fetchAll();
-      alert("Profile Updated Successfully!");
-    } catch (err) { 
-      alert("Update failed: Check all required fields."); 
+  const removeFromCommittee = async (id) => {
+    if(window.confirm("Remove from committee?")) {
+      await api.delete(`/api/committee/${id}`); fetchAll();
+    }
+  };
+
+  // REORDERING LOGIC
+  const moveItem = async (index, direction) => {
+    const newItems = [...committee];
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= newItems.length) return;
+
+    // Swap positions
+    [newItems[index], newItems[targetIndex]] = [newItems[targetIndex], newItems[index]];
+    setCommittee(newItems);
+
+    // Save the new order to the backend
+    try {
+        const orderData = newItems.map((item, idx) => ({ id: item._id, order: idx }));
+        await api.patch('/api/committee/reorder', { orders: orderData });
+    } catch (err) {
+        console.error("Failed to save new order");
     }
   };
 
@@ -111,7 +132,6 @@ const AdminPanel = () => {
               <h1>Member Management</h1>
               <input placeholder="Search members..." onChange={(e) => setSearch(e.target.value)} style={styles.searchBar} />
             </div>
-
             <div style={styles.tableCard}>
               <table style={styles.table}>
                 <thead style={styles.thead}>
@@ -122,11 +142,7 @@ const AdminPanel = () => {
                     <tr key={m._id}>
                       <td style={styles.td}>
                         <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
-                          <img 
-                            src={m.profilePic ? `${BACKEND_URL}${m.profilePic}` : defaultAvatar} 
-                            style={{width:'35px', height:'35px', borderRadius:'50%', objectFit: 'cover'}} 
-                            onError={(e) => e.target.src = defaultAvatar}
-                          />
+                          <img src={m.profilePic ? `${BACKEND_URL}${m.profilePic}` : defaultAvatar} style={{width:'35px', height:'35px', borderRadius:'50%', objectFit: 'cover'}} onError={(e) => e.target.src = defaultAvatar} />
                           <div><strong>{m.firstName} {m.lastName}</strong><br/><small>{m.email}</small></div>
                         </div>
                       </td>
@@ -145,14 +161,47 @@ const AdminPanel = () => {
         )}
 
         {activeTab === 'committee' && (
-          <div>
-            <h1>Committee</h1>
-            <button onClick={() => setActiveTab('members')} style={styles.btnBlue}>Manage in Members Tab</button>
-          </div>
+          <>
+            <h1>Committee Management</h1>
+            <div style={{backgroundColor: '#fff', padding: '20px', borderRadius: '10px', marginBottom: '20px', border: '1px solid #eee'}}>
+              <h3>Add New Committee Member</h3>
+              <form onSubmit={addToCommittee} style={{display: 'flex', gap: '15px'}}>
+                <select style={{...styles.inputS, flex: 2}} value={selectedMemberId} onChange={e => setSelectedMemberId(e.target.value)}>
+                  <option value="">Select an Approved Member...</option>
+                  {members.filter(m => m.isApproved).map(m => (
+                    <option key={m._id} value={m._id}>{m.firstName} {m.lastName} ({m.yearOfGraduation})</option>
+                  ))}
+                </select>
+                <input placeholder="Position (e.g. President)" value={committeeTitle} onChange={e => setCommitteeTitle(e.target.value)} style={{...styles.inputS, flex: 1}} />
+                <button type="submit" style={styles.btnBlue}>Add to Team</button>
+              </form>
+            </div>
+
+            <div style={styles.tableCard}>
+              <table style={styles.table}>
+                <thead style={styles.thead}>
+                  <tr><th style={styles.th}>Order</th><th style={styles.th}>Name</th><th style={styles.th}>Position</th><th style={styles.th}>Actions</th></tr>
+                </thead>
+                <tbody>
+                  {committee.map((c, index) => (
+                    <tr key={c._id}>
+                      <td style={styles.td}>
+                        <button onClick={() => moveItem(index, 'up')} disabled={index === 0} style={styles.btnOrder}>▲</button>
+                        <button onClick={() => moveItem(index, 'down')} disabled={index === committee.length - 1} style={styles.btnOrder}>▼</button>
+                      </td>
+                      <td style={styles.td}>{c.member?.firstName} {c.member?.lastName}</td>
+                      <td style={styles.td}><strong>{c.title}</strong></td>
+                      <td style={styles.td}><button onClick={() => removeFromCommittee(c._id)} style={styles.btnDelete}>Remove</button></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
 
-      {/* --- FULL EDIT MODAL --- */}
+      {/* --- EDIT MODAL --- */}
       {editData && (
         <div style={styles.modalOverlay}>
           <div style={styles.modalContent}>
@@ -160,26 +209,15 @@ const AdminPanel = () => {
               <h2>Edit: {editData.firstName}</h2>
               <button onClick={() => setEditData(null)} style={{cursor:'pointer', border:'none', background:'none', fontSize:'24px'}}>✕</button>
             </div>
-
             <div style={styles.modalScroll}>
               <h4 style={styles.secTitle}>Profile Picture</h4>
               <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '20px' }}>
-                <img 
-                    src={newPic ? URL.createObjectURL(newPic) : (editData.profilePic ? `${BACKEND_URL}${editData.profilePic}` : defaultAvatar)} 
-                    style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #003366' }}
-                    onError={(e) => e.target.src = defaultAvatar}
-                />
+                <img src={newPic ? URL.createObjectURL(newPic) : (editData.profilePic ? `${BACKEND_URL}${editData.profilePic}` : defaultAvatar)} style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover' }} onError={(e) => e.target.src = defaultAvatar}/>
                 <div>
                   <input type="file" onChange={(e) => setNewPic(e.target.files[0])} style={{display:'block', marginBottom:'5px'}} />
-                  <button 
-                    onClick={() => {setEditData({...editData, profilePic: ""}); setNewPic(null);}} 
-                    style={{fontSize:'11px', color:'red', cursor:'pointer'}}
-                  >
-                    Remove Photo
-                  </button>
+                  <button onClick={() => {setEditData({...editData, profilePic: ""}); setNewPic(null);}} style={{fontSize:'11px', color:'red', cursor:'pointer', border:'none', background:'none'}}>Remove Photo</button>
                 </div>
               </div>
-
               <h4 style={styles.secTitle}>Personal & Academic</h4>
               <div style={styles.grid2}>
                 <div><label style={styles.label}>First Name</label><input value={editData.firstName || ''} onChange={e => setEditData({...editData, firstName: e.target.value})} style={styles.inputS}/></div>
@@ -189,24 +227,10 @@ const AdminPanel = () => {
                 <div><label style={styles.label}>Degree</label><input value={editData.degree || ''} onChange={e => setEditData({...editData, degree: e.target.value})} style={styles.inputS}/></div>
                 <div><label style={styles.label}>Department</label><input value={editData.department || ''} onChange={e => setEditData({...editData, department: e.target.value})} style={styles.inputS}/></div>
               </div>
-
-              <h4 style={styles.secTitle}>Professional & Family</h4>
-              <div style={styles.grid2}>
-                <div style={{gridColumn: 'span 2'}}><label style={styles.label}>Occupation</label><input value={editData.currentOccupation || ''} onChange={e => setEditData({...editData, currentOccupation: e.target.value})} style={styles.inputS}/></div>
-                <div><label style={styles.label}>Spouse First Name</label><input value={editData.spouseFirstName || ''} onChange={e => setEditData({...editData, spouseFirstName: e.target.value})} style={styles.inputS}/></div>
-                <div><label style={styles.label}>Spouse Last Name</label><input value={editData.spouseLastName || ''} onChange={e => setEditData({...editData, spouseLastName: e.target.value})} style={styles.inputS}/></div>
-                <div><label style={styles.label}>Number of Kids</label><input type="number" value={editData.numberOfChildren || 0} onChange={e => setEditData({...editData, numberOfChildren: e.target.value})} style={styles.inputS}/></div>
-                <div><label style={styles.label}>Marital Status</label>
-                  <select value={editData.maritalStatus || ''} onChange={e => setEditData({...editData, maritalStatus: e.target.value})} style={styles.inputS}>
-                    <option value="Single">Single</option><option value="Married">Married</option>
-                  </select>
-                </div>
-              </div>
             </div>
-
             <div style={styles.modalFooter}>
               <button onClick={() => setEditData(null)} style={styles.btnCancel}>Cancel</button>
-              <button onClick={saveFullEdit} style={styles.btnSave}>Save All Changes</button>
+              <button onClick={saveFullEdit} style={styles.btnSave}>Save Changes</button>
             </div>
           </div>
         </div>
@@ -230,6 +254,7 @@ const styles = {
   btnAction: { backgroundColor:'#17a2b8', color:'white', border:'none', padding: '6px 10px', borderRadius:'4px', cursor: 'pointer', marginRight: '5px' },
   btnLife: { backgroundColor: '#ffcc00', border: 'none', padding: '6px 10px', borderRadius: '4px', cursor: 'pointer', marginRight: '5px' },
   btnDelete: { backgroundColor: '#dc3545', color: 'white', border: 'none', padding: '6px 10px', borderRadius: '4px', cursor: 'pointer' },
+  btnOrder: { cursor: 'pointer', background: '#eee', border: '1px solid #ccc', marginRight: '4px', borderRadius: '3px', padding: '2px 6px' },
   modalOverlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 },
   modalContent: { backgroundColor: 'white', padding: '25px', borderRadius: '15px', width: '800px', maxHeight: '90vh', display: 'flex', flexDirection: 'column' },
   modalScroll: { overflowY: 'auto', paddingRight: '10px' },
