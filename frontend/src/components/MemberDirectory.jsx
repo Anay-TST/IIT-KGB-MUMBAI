@@ -6,10 +6,9 @@ const MemberDirectory = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch data from our Node.js backend
     const fetchMembers = async () => {
       try {
-        // Using relative path - ensure your proxy is configured in vite.config.js
+        // Using relative path for the Vite proxy
         const response = await axios.get('/api/alumni');
         setMembers(response.data);
         setLoading(false);
@@ -32,7 +31,7 @@ const MemberDirectory = () => {
       
       <div className="member-grid" style={{ 
         display: 'grid', 
-        gridTemplateColumns: '广泛(auto-fill, minmax(250px, 1fr))', 
+        gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', 
         gap: '20px',
         marginTop: '20px' 
       }}>
