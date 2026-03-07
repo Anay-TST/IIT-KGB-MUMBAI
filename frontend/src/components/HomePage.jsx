@@ -20,11 +20,11 @@ const HomePage = () => {
   return (
     <div style={{ fontFamily: '"Segoe UI", Roboto, Helvetica, Arial, sans-serif', width: '100%' }}>
       
-      {/* 1. HERO SECTION (Compact Height) */}
+      {/* 1. HERO SECTION */}
       <section style={{ 
         position: 'relative',
         width: '100%',
-        minHeight: '35vh', // Reduced from 65vh to 35vh
+        minHeight: '35vh', 
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -50,36 +50,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* 2. ABOUT IIT KGP SECTION (Compact Padding & Tighter Grid) */}
-      <section style={{ padding: '40px 20px', backgroundColor: '#ffffff', textAlign: 'center' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <h2 style={{ fontSize: '1.8rem', color: '#003366', margin: '0 0 10px 0' }}>Our Historic Legacy</h2>
-          <p style={{ color: '#555', maxWidth: '800px', margin: '0 auto 25px auto', fontSize: '1rem', lineHeight: '1.5' }}>
-            Born in 1951 in the historic Hijli Detention Camp, IIT Kharagpur is the first of the IITs. Today, it stands as a global leader in engineering and research.
-          </p>
-          
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', justifyContent: 'center' }}>
-            {/* Fact Cards - Reduced Padding and Icon Size */}
-            <div style={{ flex: '1 1 250px', padding: '20px 15px', backgroundColor: '#f8f9fa', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-              <div style={{ fontSize: '2rem', marginBottom: '10px' }}>🏛️</div>
-              <h3 style={{ fontSize: '1.1rem', color: '#003366', marginBottom: '5px' }}>The First IIT</h3>
-              <p style={{ color: '#666', margin: 0, fontSize: '0.9rem', lineHeight: '1.4' }}>Established in 1951, paving the way for technical education in independent India.</p>
-            </div>
-            <div style={{ flex: '1 1 250px', padding: '20px 15px', backgroundColor: '#f8f9fa', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-              <div style={{ fontSize: '2rem', marginBottom: '10px' }}>🌳</div>
-              <h3 style={{ fontSize: '1.1rem', color: '#003366', marginBottom: '5px' }}>2,100 Acre Campus</h3>
-              <p style={{ color: '#666', margin: 0, fontSize: '0.9rem', lineHeight: '1.4' }}>A lush, self-contained township and the largest campus among all IITs in the country.</p>
-            </div>
-            <div style={{ flex: '1 1 250px', padding: '20px 15px', backgroundColor: '#f8f9fa', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-              <div style={{ fontSize: '2rem', marginBottom: '10px' }}>🧘</div>
-              <h3 style={{ fontSize: '1.1rem', color: '#003366', marginBottom: '5px' }}>Yogaḥ Karmasu Kauśalam</h3>
-              <p style={{ color: '#666', margin: 0, fontSize: '0.9rem', lineHeight: '1.4' }}>"Excellence in action is Yoga." Our motto inspiring global greatness.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 3. NEWS & EVENTS SECTION (Tighter Gaps) */}
+      {/* 2. NEWS & EVENTS SECTION (Moved up!) */}
       <section style={{ backgroundColor: '#f0f4f8', padding: '40px 20px' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', flexWrap: 'wrap', gap: '30px' }}>
           
@@ -91,7 +62,7 @@ const HomePage = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
               {latestNews.length === 0 ? <p style={{ color: '#666', fontSize: '0.9rem' }}>Loading latest updates...</p> : latestNews.map((article) => (
                 <div key={article._id} style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', backgroundColor: '#fff', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-                  {/* Smaller Thumbnail Image */}
+                  {/* Thumbnail Image */}
                   <div style={{ flex: '0 0 100px', minHeight: '100px', backgroundImage: 'url("https://images.unsplash.com/photo-1523240795612-9a054b0db644?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80")', backgroundSize: 'cover', backgroundPosition: 'center' }}></div>
                   
                   <div style={{ padding: '15px', flex: '1 1 250px' }}>
@@ -100,7 +71,6 @@ const HomePage = () => {
                       By {article.author} | {new Date(article.date).toLocaleDateString()}
                     </p>
                     <p style={{ margin: 0, color: '#444', fontSize: '0.9rem', lineHeight: '1.4' }}>
-                      {/* Truncate text slightly for compactness */}
                       {article.content.length > 100 ? `${article.content.substring(0, 100)}...` : article.content}
                     </p>
                   </div>
@@ -135,6 +105,35 @@ const HomePage = () => {
             </button>
           </div>
 
+        </div>
+      </section>
+
+      {/* 3. ABOUT IIT KGP SECTION (Moved down!) */}
+      <section style={{ padding: '40px 20px', backgroundColor: '#ffffff', textAlign: 'center' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+          <h2 style={{ fontSize: '1.8rem', color: '#003366', margin: '0 0 10px 0' }}>Our Historic Legacy</h2>
+          <p style={{ color: '#555', maxWidth: '800px', margin: '0 auto 25px auto', fontSize: '1rem', lineHeight: '1.5' }}>
+            Born in 1951 in the historic Hijli Detention Camp, IIT Kharagpur is the first of the IITs. Today, it stands as a global leader in engineering and research.
+          </p>
+          
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', justifyContent: 'center' }}>
+            {/* Fact Cards */}
+            <div style={{ flex: '1 1 250px', padding: '20px 15px', backgroundColor: '#f8f9fa', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+              <div style={{ fontSize: '2rem', marginBottom: '10px' }}>🏛️</div>
+              <h3 style={{ fontSize: '1.1rem', color: '#003366', marginBottom: '5px' }}>The First IIT</h3>
+              <p style={{ color: '#666', margin: 0, fontSize: '0.9rem', lineHeight: '1.4' }}>Established in 1951, paving the way for technical education in independent India.</p>
+            </div>
+            <div style={{ flex: '1 1 250px', padding: '20px 15px', backgroundColor: '#f8f9fa', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+              <div style={{ fontSize: '2rem', marginBottom: '10px' }}>🌳</div>
+              <h3 style={{ fontSize: '1.1rem', color: '#003366', marginBottom: '5px' }}>2,100 Acre Campus</h3>
+              <p style={{ color: '#666', margin: 0, fontSize: '0.9rem', lineHeight: '1.4' }}>A lush, self-contained township and the largest campus among all IITs in the country.</p>
+            </div>
+            <div style={{ flex: '1 1 250px', padding: '20px 15px', backgroundColor: '#f8f9fa', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+              <div style={{ fontSize: '2rem', marginBottom: '10px' }}>🧘</div>
+              <h3 style={{ fontSize: '1.1rem', color: '#003366', marginBottom: '5px' }}>Yogaḥ Karmasu Kauśalam</h3>
+              <p style={{ color: '#666', margin: 0, fontSize: '0.9rem', lineHeight: '1.4' }}>"Excellence in action is Yoga." Our motto inspiring global greatness.</p>
+            </div>
+          </div>
         </div>
       </section>
       

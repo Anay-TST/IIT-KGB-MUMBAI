@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const articleSchema = new mongoose.Schema({
   title: { type: String, required: true },
   content: { type: String, required: true },
-  author: { type: String, required: true }, // E.g., "Admin" or an Alumni's name
+  author: { type: String, required: true },
   date: { type: Date, default: Date.now }
 });
 
