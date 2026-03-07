@@ -5,6 +5,15 @@ import AddMember from './AddMember';
 const MembersPage = () => {
   const [showRegisterForm, setShowRegisterForm] = useState(false);
 
+  // This function will be called when registration is successful
+  const handleRegistrationSuccess = () => {
+    // Option A: Hard Refresh (Exactly what you asked for)
+    window.location.reload(); 
+
+    // Option B: Soft Refresh (Better user experience)
+    // setShowRegisterForm(false); // Closes the form automatically
+  };
+
   return (
     <div style={{ backgroundColor: '#f8f9fa', minHeight: 'calc(100vh - 60px)' }}>
       
@@ -17,7 +26,12 @@ const MembersPage = () => {
         
         <button 
           onClick={() => setShowRegisterForm(!showRegisterForm)}
-          style={{ padding: '12px 24px', backgroundColor: showRegisterForm ? '#dc3545' : '#28a745', color: 'white', border: 'none', borderRadius: '8px', fontSize: '1.1rem', cursor: 'pointer', fontWeight: 'bold', transition: '0.3s' }}
+          style={{ 
+            padding: '12px 24px', 
+            backgroundColor: showRegisterForm ? '#dc3545' : '#28a745', 
+            color: 'white', border: 'none', borderRadius: '8px', 
+            fontSize: '1.1rem', cursor: 'pointer', fontWeight: 'bold', transition: '0.3s' 
+          }}
         >
           {showRegisterForm ? '✖ Cancel Registration' : '➕ Register as New Member'}
         </button>
@@ -25,7 +39,8 @@ const MembersPage = () => {
 
       {showRegisterForm && (
         <div style={{ padding: '20px', backgroundColor: '#e9ecef', borderBottom: '1px solid #ddd' }}>
-           <AddMember />
+           {/* Pass the refresh function as a prop */}
+           <AddMember onSuccess={handleRegistrationSuccess} />
         </div>
       )}
 

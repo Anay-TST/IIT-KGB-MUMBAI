@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '../api'; // Use our configured api instance
 
-const AddMember = () => {
+const AddMember = ({ onSuccess }) => {
   const [formData, setFormData] = useState({
     firstName: '', lastName: '', email: '', mobile: '', birthdate: '', sex: '', 
     maritalStatus: 'Single', yearOfGraduation: '', department: '', degree: '', 
@@ -15,12 +15,30 @@ const AddMember = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const data = new FormData();
-    Object.keys(formData).forEach(k => data.append(k, formData[k]));
+    
+    // Append all form fields to FormData
+    Object.keys(formData).forEach(k => {
+      // Don't send empty strings for dates to avoid backend validation errors
+      if ((k === 'birthdate' || k === 'anniversaryDate') && !formData[k]) return;
+      data.append(k, formData[k]);
+    });
+
     if (file) data.append('profilePic', file);
+
     try {
-      await axios.post('/api/alumni', data);
+      // Use api.post instead of axios.post
+      await api.post('/api/alumni', data, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
       alert('Registration Submitted Successfully!');
+      
+      // Call the success callback to refresh the page
+      if (onSuccess) {
+        onSuccess();
+      }
     } catch (err) { 
+      console.error(err);
       alert('Error: ' + (err.response?.data?.message || 'Submission failed')); 
     }
   };
@@ -115,7 +133,7 @@ const AddMember = () => {
 };
 
 const styles = {
-  container: { maxWidth: '850px', margin: '40px auto', padding: '30px', backgroundColor: '#fff', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.1)', fontFamily: 'sans-serif' },
+  container: { maxWidth: '850px', margin: '10px auto', padding: '30px', backgroundColor: '#fff', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.1)', fontFamily: 'sans-serif' },
   mainTitle: { color: '#003366', textAlign: 'center', marginBottom: '30px', fontSize: '24px', fontWeight: 'bold' },
   section: { marginBottom: '25px', padding: '20px', border: '1px solid #edf2f7', borderRadius: '8px' },
   sectionTitle: { marginTop: '0', marginBottom: '15px', color: '#003366', borderBottom: '2px solid #ffcc00', display: 'inline-block', paddingBottom: '3px' },

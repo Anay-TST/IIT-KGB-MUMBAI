@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api, { BACKEND_URL } from '../api';
 
 const MemberDirectory = () => {
   const [members, setMembers] = useState([]);
   const [search, setSearch] = useState('');
   const [filterLife, setFilterLife] = useState(false);
 
-  // Set your backend URL here (Use localhost or your Codespace forwarded URL)
-  const BACKEND_URL = 'http://localhost:5000'; 
   const defaultAvatar = 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
 
   useEffect(() => { 
-    axios.get(`${BACKEND_URL}/api/alumni`).then(res => setMembers(res.data)); 
+    // Uses the api instance which points to your specific Codespace URL
+    api.get('/api/alumni')
+      .then(res => setMembers(res.data))
+      .catch(err => console.error("Directory fetch error:", err));
   }, []);
 
   // Filter Logic: Matches search text AND (if filter is on) matches isLifeMember status
@@ -39,7 +40,6 @@ const MemberDirectory = () => {
             style={{ padding: '10px', width: '300px', borderRadius: '5px', border: '1px solid #ccc' }} 
           />
           
-          {/* THE UPDATED FILTER BUTTON */}
           <button 
             onClick={() => setFilterLife(!filterLife)} 
             style={{ 

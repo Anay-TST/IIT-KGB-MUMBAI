@@ -31,8 +31,15 @@ const CommitteePage = () => {
             <h3 style={{ margin: '15px 0 5px 0', color: '#003366', fontSize: '1.4rem' }}>
               {c.member?.firstName} {c.member?.lastName}
             </h3>
+            
             <div style={titleBadge}>{c.title}</div>
-            <p style={{ color: '#777', fontSize: '0.9rem', marginTop: '10px' }}>
+
+            {/* NEW SECTION: DEGREE AND DEPARTMENT */}
+            <div style={{ marginTop: '12px', color: '#444', fontWeight: '500' }}>
+              {c.member?.degree} • {c.member?.department}
+            </div>
+
+            <p style={{ color: '#777', fontSize: '0.9rem', marginTop: '8px' }}>
               Batch of {c.member?.yearOfGraduation} | {c.member?.hall}
             </p>
           </div>
@@ -53,7 +60,10 @@ const cardStyle = {
   borderRadius: '20px',
   boxShadow: '0 15px 35px rgba(0,0,0,0.05)',
   border: '1px solid #f0f0f0',
-  transition: 'transform 0.3s ease'
+  transition: 'transform 0.3s ease',
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center'
 };
 
 const imgContainer = {
@@ -62,7 +72,7 @@ const imgContainer = {
   margin: '0 auto 20px auto',
   borderRadius: '50%',
   padding: '5px',
-  border: '2px dashed #d4af37' // Gold border for committee members
+  border: '2px dashed #d4af37' // Gold border
 };
 
 const imgStyle = {
