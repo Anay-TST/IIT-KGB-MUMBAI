@@ -9,14 +9,12 @@ const memberSchema = new mongoose.Schema({
     type: String, 
     required: true,
     validate: {
-      validator: function(v) {
-        return /^\d{10}$/.test(v); // Ensures exactly 10 digits
-      },
-      message: props => `${props.value} is not a valid 10-digit phone number!`
+      validator: function(v) { return /^\d{10}$/.test(v); },
+      message: 'Mobile number must be exactly 10 digits'
     }
   },
   birthdate: { type: Date, required: true },
-  sex: { type: String, enum: ['Male', 'Female', 'Other'], required: true },
+  sex: { type: String, required: true },
   maritalStatus: { 
     type: String, 
     enum: ['Single', 'Married', 'Divorced', 'Separated', 'Widowed'], 
@@ -26,7 +24,7 @@ const memberSchema = new mongoose.Schema({
   department: { type: String, required: true },
   degree: { type: String, required: true },
   hall: { type: String, required: true },
-  lifeMemberNumber: { type: String }, 
+  lifeMemberNumber: { type: String },
   currentOccupation: { type: String },
   residenceAddress: { type: String, required: true },
   officeAddress: { type: String },
@@ -34,7 +32,7 @@ const memberSchema = new mongoose.Schema({
   anniversaryDate: { type: Date },
   spouseBirthdate: { type: Date },
   numberOfChildren: { type: Number, default: 0 },
-  isApproved: { type: Boolean, default: false }, // New members are hidden by default
+  isApproved: { type: Boolean, default: false }, // Hidden until admin approves
   createdAt: { type: Date, default: Date.now }
 });
 

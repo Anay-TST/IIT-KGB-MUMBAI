@@ -20,59 +20,56 @@ const AddMember = () => {
       alert("Error: Mobile number must be exactly 10 digits.");
       return;
     }
-
     try {
       await axios.post('/api/alumni', formData);
-      alert('Registration submitted! An admin will approve your profile shortly.');
+      alert('Success! Registration submitted for admin approval.');
     } catch (err) {
-      const serverMsg = err.response?.data?.message || 'Check all fields and try again.';
-      alert('Registration Failed: ' + serverMsg);
+      alert('Failed: ' + (err.response?.data?.message || 'Check connection'));
     }
   };
 
   return (
-    <div style={{ maxWidth: '800px', margin: '40px auto', padding: '30px', border: '1px solid #ddd', borderRadius: '15px', backgroundColor: '#fff' }}>
-      <h2 style={{ color: '#003366', textAlign: 'center' }}>Member Registration</h2>
+    <div style={{ maxWidth: '800px', margin: '40px auto', padding: '30px', border: '1px solid #ddd', borderRadius: '12px' }}>
+      <h2 style={{ textAlign: 'center', color: '#003366' }}>Member Registration</h2>
       <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '20px' }}>
         
-        <div style={rowStyle}>
-          <div style={inputGroup}>
-            <label style={labelStyle}>First Name</label>
+        <div style={{ display: 'flex', gap: '15px' }}>
+          <div style={{ flex: 1 }}>
+            <label>First Name</label>
             <input name="firstName" style={inputStyle} onChange={handleChange} required />
           </div>
-          <div style={inputGroup}>
-            <label style={labelStyle}>Last Name</label>
+          <div style={{ flex: 1 }}>
+            <label>Last Name</label>
             <input name="lastName" style={inputStyle} onChange={handleChange} required />
           </div>
         </div>
-        
-        <div style={inputGroup}>
-          <label style={labelStyle}>Email Address</label>
+
+        <div>
+          <label>Email Address</label>
           <input name="email" type="email" style={inputStyle} onChange={handleChange} required />
         </div>
 
-        <div style={rowStyle}>
-          <div style={inputGroup}>
-            <label style={labelStyle}>Country Code</label>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <div>
+            <label>Code</label>
             <select name="countryCode" style={inputStyle} onChange={handleChange}>
-              <option value="+91">+91 (India)</option>
-              <option value="+1">+1 (USA)</option>
-              <option value="+44">+44 (UK)</option>
+              <option value="+91">+91 (IN)</option>
+              <option value="+1">+1 (US)</option>
             </select>
           </div>
-          <div style={{ ...inputGroup, flex: 2 }}>
-            <label style={labelStyle}>Mobile Number (10 digits)</label>
-            <input name="mobile" placeholder="e.g. 9876543210" style={inputStyle} onChange={handleChange} required />
+          <div style={{ flex: 1 }}>
+            <label>10-Digit Mobile Number</label>
+            <input name="mobile" placeholder="9876543210" style={inputStyle} onChange={handleChange} required />
           </div>
         </div>
 
-        <div style={rowStyle}>
-          <div style={inputGroup}>
-            <label style={labelStyle}>Birthdate</label>
+        <div style={{ display: 'flex', gap: '15px' }}>
+          <div>
+            <label>Birthdate</label>
             <input name="birthdate" type="date" style={inputStyle} onChange={handleChange} required />
           </div>
-          <div style={inputGroup}>
-            <label style={labelStyle}>Sex</label>
+          <div>
+            <label>Sex</label>
             <select name="sex" style={inputStyle} onChange={handleChange} required>
               <option value="">Select</option>
               <option value="Male">Male</option>
@@ -80,8 +77,8 @@ const AddMember = () => {
               <option value="Other">Other</option>
             </select>
           </div>
-          <div style={inputGroup}>
-            <label style={labelStyle}>Marital Status</label>
+          <div>
+            <label>Marital Status</label>
             <select name="maritalStatus" style={inputStyle} onChange={handleChange} required>
               <option value="Single">Single</option>
               <option value="Married">Married</option>
@@ -92,48 +89,33 @@ const AddMember = () => {
           </div>
         </div>
 
-        <fieldset style={fieldsetStyle}>
-          <legend style={legendStyle}>IIT KGP Academic Details</legend>
-          <div style={rowStyle}>
-            <div style={inputGroup}><label style={labelStyle}>Graduation Year</label><input name="yearOfGraduation" type="number" style={inputStyle} onChange={handleChange} required /></div>
-            <div style={inputGroup}><label style={labelStyle}>Degree</label><input name="degree" placeholder="B.Tech / M.Tech" style={inputStyle} onChange={handleChange} required /></div>
+        <fieldset style={{ padding: '15px', borderRadius: '8px', border: '1px solid #ccc' }}>
+          <legend style={{ fontWeight: 'bold' }}>IIT KGP Details</legend>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+            <div><label>Graduation Year</label><input name="yearOfGraduation" type="number" style={inputStyle} onChange={handleChange} required /></div>
+            <div><label>Degree</label><input name="degree" placeholder="B.Tech" style={inputStyle} onChange={handleChange} required /></div>
+            <div><label>Department</label><input name="department" style={inputStyle} onChange={handleChange} required /></div>
+            <div><label>Hall of Residence</label><input name="hall" style={inputStyle} onChange={handleChange} required /></div>
           </div>
-          <div style={{...rowStyle, marginTop:'10px'}}>
-            <div style={inputGroup}><label style={labelStyle}>Department</label><input name="department" style={inputStyle} onChange={handleChange} required /></div>
-            <div style={inputGroup}><label style={labelStyle}>Hall</label><input name="hall" style={inputStyle} onChange={handleChange} required /></div>
+          <div style={{ marginTop: '10px' }}>
+            <label>Life Member Number</label>
+            <input name="lifeMemberNumber" style={inputStyle} onChange={handleChange} />
           </div>
-          <div style={{marginTop:'10px'}}><label style={labelStyle}>Life Member Number</label><input name="lifeMemberNumber" style={inputStyle} onChange={handleChange} /></div>
         </fieldset>
 
-        <div style={inputGroup}><label style={labelStyle}>Current Occupation</label><input name="currentOccupation" style={inputStyle} onChange={handleChange} /></div>
-        <div style={inputGroup}><label style={labelStyle}>Residence Address</label><textarea name="residenceAddress" style={{...inputStyle, height:'60px'}} onChange={handleChange} required /></div>
-        <div style={inputGroup}><label style={labelStyle}>Office Address</label><textarea name="officeAddress" style={{...inputStyle, height:'60px'}} onChange={handleChange} /></div>
+        <div>
+          <label>Residence Address</label>
+          <textarea name="residenceAddress" style={inputStyle} onChange={handleChange} required />
+        </div>
 
-        {formData.maritalStatus === 'Married' && (
-          <fieldset style={{ ...fieldsetStyle, backgroundColor: '#f9f9f9' }}>
-            <legend style={legendStyle}>Spouse & Family</legend>
-            <div style={inputGroup}><label style={labelStyle}>Spouse Name</label><input name="spouseName" style={inputStyle} onChange={handleChange} /></div>
-            <div style={{...rowStyle, marginTop:'10px'}}>
-              <div style={inputGroup}><label style={labelStyle}>Anniversary</label><input name="anniversaryDate" type="date" style={inputStyle} onChange={handleChange} /></div>
-              <div style={inputGroup}><label style={labelStyle}>Spouse DOB</label><input name="spouseBirthdate" type="date" style={inputStyle} onChange={handleChange} /></div>
-            </div>
-          </fieldset>
-        )}
-
-        <div style={inputGroup}><label style={labelStyle}>Number of Children</label><input name="numberOfChildren" type="number" style={{...inputStyle, width:'100px'}} onChange={handleChange} /></div>
-
-        <button type="submit" style={buttonStyle}>Submit Registration</button>
+        <button type="submit" style={{ padding: '15px', background: '#003366', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
+          Register Now
+        </button>
       </form>
     </div>
   );
 };
 
-const rowStyle = { display: 'flex', gap: '15px' };
-const inputGroup = { display: 'flex', flexDirection: 'column', flex: 1 };
-const labelStyle = { fontSize: '0.8rem', fontWeight: 'bold', marginBottom: '5px', color: '#555' };
-const inputStyle = { padding: '10px', border: '1px solid #ccc', borderRadius: '5px' };
-const fieldsetStyle = { border: '1px solid #ddd', borderRadius: '8px', padding: '15px' };
-const legendStyle = { fontWeight: 'bold', color: '#003366', padding: '0 10px' };
-const buttonStyle = { padding: '15px', backgroundColor: '#003366', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' };
+const inputStyle = { width: '100%', padding: '10px', marginTop: '5px', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' };
 
 export default AddMember;
