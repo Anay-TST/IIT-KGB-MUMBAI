@@ -11,6 +11,7 @@ import MemberDirectory from './components/MemberDirectory';
 import AddMember from './components/AddMember'; 
 import NewsSection from './components/NewsSection';
 import AddEvent from './components/AddEvent';
+import AdminPanel from './components/AdminPanel'; // Ensure this component is created
 
 import './App.css';
 
@@ -24,9 +25,11 @@ function App() {
         <Routes>
           {/* Main Public Pages */}
           <Route path="/" element={<HomePage />} />
+          
+          {/* Public Register/Add Member Page */}
           <Route path="/members" element={<MembersPage />} />
           
-          {/* Directory Route */}
+          {/* Public Approved Members Directory */}
           <Route path="/directory" element={<MemberDirectory />} />
           
           {/* News Page */}
@@ -44,31 +47,8 @@ function App() {
             </div>
           } />
 
-          {/* ADMIN DASHBOARD */}
-          <Route path="/admin" element={
-            <div style={{ padding: '40px 20px', maxWidth: '800px', margin: '0 auto' }}>
-              <h1 style={{ textAlign: 'center', color: '#003366', marginBottom: '40px' }}>
-                Portal Admin Dashboard
-              </h1>
-              
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
-                <section style={{ padding: '20px', border: '1px solid #ddd', borderRadius: '12px', backgroundColor: '#fff' }}>
-                  <h2 style={{ marginTop: 0 }}>📅 Event Management</h2>
-                  <AddEvent />
-                </section>
-
-                <section style={{ padding: '20px', border: '1px solid #ddd', borderRadius: '12px', backgroundColor: '#fff' }}>
-                  <h2 style={{ marginTop: 0 }}>📰 News Management</h2>
-                  <NewsSection />
-                </section>
-
-                <section style={{ padding: '20px', border: '1px solid #ddd', borderRadius: '12px', backgroundColor: '#fff' }}>
-                  <h2 style={{ marginTop: 0 }}>👥 Member Management</h2>
-                  <AddMember />
-                </section>
-              </div>
-            </div>
-          } />
+          {/* PROTECTED ADMIN DASHBOARD */}
+          <Route path="/admin" element={<AdminPanel />} />
         </Routes>
 
         {/* Simple Footer */}

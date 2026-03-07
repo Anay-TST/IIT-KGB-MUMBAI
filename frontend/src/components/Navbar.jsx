@@ -1,37 +1,72 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const Navbar = () => {
   return (
-    <nav style={{ 
-      display: 'flex', 
-      justifyContent: 'space-between', 
-      alignItems: 'center', 
-      padding: '15px 40px', 
-      backgroundColor: '#003366', // KGP Blueish tone
-      color: 'white',
-      position: 'sticky',
-      top: 0,
-      zIndex: 1000
-    }}>
-      <div style={{ fontWeight: 'bold', fontSize: '1.5em' }}>
-        IIT KGP Alumni Mumbai
+    <nav style={styles.nav}>
+      <div style={styles.logo}>
+        <Link to="/" style={styles.logoLink}>IIT KGP Alumni - Mumbai</Link>
       </div>
-      <ul style={{ 
-        display: 'flex', 
-        gap: '25px', 
-        listStyle: 'none', 
-        margin: 0, 
-        padding: 0,
-        cursor: 'pointer'
-      }}>
-        <li className="nav-item">Home</li>
-        <li className="nav-item">Members</li>
-        <li className="nav-item">News</li>
-        <li className="nav-item">Events</li>
-        <li className="nav-item" style={{ color: '#FFD700' }}>Admin</li>
+      <ul style={styles.navLinks}>
+        <li>
+          <Link to="/" style={styles.link}>Home</Link>
+        </li>
+        <li>
+          <Link to="/members" style={styles.link}>Members</Link>
+        </li>
+        <li>
+          <Link to="/directory" style={styles.link}>Directory</Link>
+        </li>
+        <li>
+          <Link to="/news" style={styles.link}>News</Link>
+        </li>
+        <li>
+          <Link to="/admin" style={styles.adminLink}>Admin</Link>
+        </li>
       </ul>
     </nav>
   );
+};
+
+const styles = {
+  nav: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '0 40px',
+    height: '70px',
+    backgroundColor: '#001f3f', // Navy Blue
+    color: 'white',
+    boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
+  },
+  logo: {
+    fontSize: '1.5rem',
+    fontWeight: 'bold',
+  },
+  logoLink: {
+    color: '#ffcc00', // Gold color for IIT spirit
+    textDecoration: 'none',
+  },
+  navLinks: {
+    display: 'flex',
+    listStyle: 'none',
+    gap: '25px',
+    alignItems: 'center',
+  },
+  link: {
+    color: 'white',
+    textDecoration: 'none',
+    fontSize: '1rem',
+    transition: 'color 0.3s',
+  },
+  adminLink: {
+    color: '#ffcc00',
+    textDecoration: 'none',
+    border: '1px solid #ffcc00',
+    padding: '5px 15px',
+    borderRadius: '20px',
+    fontSize: '0.9rem',
+  }
 };
 
 export default Navbar;

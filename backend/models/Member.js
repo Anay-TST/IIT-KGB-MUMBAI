@@ -1,12 +1,41 @@
 const mongoose = require('mongoose');
 
 const memberSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  batch: { type: Number, required: true }, // e.g., 2018
+  firstName: { type: String, required: true },
+  lastName: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  countryCode: { type: String, default: '+91' },
+  mobile: { 
+    type: String, 
+    required: true,
+    validate: {
+      validator: function(v) {
+        return /^\d{10}$/.test(v); // Ensures exactly 10 digits
+      },
+      message: props => `${props.value} is not a valid 10-digit phone number!`
+    }
+  },
+  birthdate: { type: Date, required: true },
+  sex: { type: String, enum: ['Male', 'Female', 'Other'], required: true },
+  maritalStatus: { 
+    type: String, 
+    enum: ['Single', 'Married', 'Divorced', 'Separated', 'Widowed'], 
+    required: true 
+  },
+  yearOfGraduation: { type: Number, required: true },
   department: { type: String, required: true },
-  isLifeMember: { type: Boolean, default: false },
-  linkedinUrl: { type: String },
-  bio: { type: String }
-}, { timestamps: true });
+  degree: { type: String, required: true },
+  hall: { type: String, required: true },
+  lifeMemberNumber: { type: String }, 
+  currentOccupation: { type: String },
+  residenceAddress: { type: String, required: true },
+  officeAddress: { type: String },
+  spouseName: { type: String },
+  anniversaryDate: { type: Date },
+  spouseBirthdate: { type: Date },
+  numberOfChildren: { type: Number, default: 0 },
+  isApproved: { type: Boolean, default: false }, // New members are hidden by default
+  createdAt: { type: Date, default: Date.now }
+});
 
 module.exports = mongoose.model('Member', memberSchema);
