@@ -31,6 +31,7 @@ function App() {
           
           {/* Public Approved Members Directory */}
           <Route path="/directory" element={<MemberDirectory />} />
+          <Route path="/committee" element={<CommitteePage />} />
           
           {/* News Page */}
           <Route path="/news" element={

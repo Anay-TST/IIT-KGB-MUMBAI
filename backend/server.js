@@ -21,6 +21,7 @@ app.use('/api/events', eventRoutes);
 // SERVE STATIC FILES
 // This maps the physical 'uploads' folder to the URL path '/uploads'
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/api/committee', require('./routes/committeeRoutes'));
 
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('Connected to KGP Alumni Database'))
