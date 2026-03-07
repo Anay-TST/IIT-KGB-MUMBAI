@@ -11,7 +11,10 @@ app.use(express.json()); // Allows us to accept JSON data
 
 // Routes
 const alumniRoutes = require('./routes/alumniRoutes');
+const articleRoutes = require('./routes/articleRoutes'); // <-- Add this line
+
 app.use('/api/alumni', alumniRoutes);
+app.use('/api/articles', articleRoutes); // <-- Add this line
 
 // Database Connection
 mongoose.connect(process.env.MONGO_URI)
