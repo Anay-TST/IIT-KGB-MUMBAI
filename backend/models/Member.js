@@ -28,7 +28,13 @@ const memberSchema = new mongoose.Schema({
   currentOccupation: { type: String },
   residenceAddress: { type: String, required: true },
   officeAddress: { type: String },
-  spouseName: { type: String },
+  
+  // PHOTO FIELD (Crucial for fixing the undefined error)
+  profilePic: { type: String }, 
+
+  // FAMILY DETAILS
+  spouseFirstName: { type: String },
+  spouseLastName: { type: String },
   anniversaryDate: { type: Date },
   spouseBirthdate: { type: Date },
   numberOfChildren: { type: Number, default: 0 },
