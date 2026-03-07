@@ -3,62 +3,44 @@ import axios from 'axios';
 
 const MemberDirectory = () => {
   const [members, setMembers] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [filterLife, setFilterLife] = useState(false);
 
-  useEffect(() => {
-    const fetchMembers = async () => {
-      try {
-        // Using relative path for the Vite proxy
-        const response = await axios.get('/api/alumni');
-        setMembers(response.data);
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching alumni data:", error);
-        setLoading(false);
-      }
-    };
+  useEffect(() => { axios.get('/api/alumni').then(res => setMembers(res.data)); }, []);
 
-    fetchMembers();
-  }, []);
-
-  if (loading) return <p style={{ textAlign: 'center', padding: '20px' }}>Loading KGPians...</p>;
+  const filtered = members.filter(m => {
+    const matchesSearch = `${m.firstName} ${m.lastName} ${m.hall} ${m.yearOfGraduation}`.toLowerCase().includes(search.toLowerCase());
+    return filterLife ? (matchesSearch && m.isLifeMember) : matchesSearch;
+  });
 
   return (
-    <div className="directory-container" style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
-      <h2 style={{ color: '#003366', borderBottom: '2px solid #ffcc00', paddingBottom: '10px' }}>
-        Alumni Directory
-      </h2>
-      
-      <div className="member-grid" style={{ 
-        display: 'grid', 
-        gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', 
-        gap: '20px',
-        marginTop: '20px' 
-      }}>
-        {members.length > 0 ? (
-          members.map((member) => (
-            <div 
-              key={member._id} 
-              className="member-card" 
-              style={{ 
-                border: '1px solid #eee', 
-                padding: '20px', 
-                borderRadius: '12px', 
-                backgroundColor: '#fff',
-                boxShadow: '0 4px 6px rgba(0,0,0,0.05)'
-              }}
-            >
-              <h3 style={{ margin: '0 0 10px 0', color: '#001f3f' }}>
-                {member.name} {member.isLifeMember && <span title="Life Member" style={{ color: '#ffd700' }}>⭐</span>}
-              </h3>
-              <p style={{ margin: '5px 0' }}><strong>Batch:</strong> {member.batch}</p>
-              <p style={{ margin: '5px 0' }}><strong>Department:</strong> {member.department}</p>
-            </div>
-          ))
-        ) : (
-          <p>No members found in the directory.</p>
-        )}
+    <div style={{ padding: '30px', maxWidth: '1000px', margin: '0 auto' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
+        <h2>Alumni Directory</h2>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <input placeholder="Search..." onChange={e => setSearch(e.target.value)} style={{ padding: '8px', border: '1px solid #ccc' }} />
+          <button onClick={() => setFilterLife(!filterLife)} style={{ backgroundColor: filterLife ? '#ffcc00' : '#eee' }}>
+            {filterLife ? '★ Life Members' : 'All Members'}
+          </button>
+        </div>
       </div>
+      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <thead style={{ backgroundColor: '#001f3f', color: 'white' }}>
+          <tr><th>Pic</th><th>Name</th><th>Batch</th><th>Degree</th><th>Dept</th><th>Hall</th></tr>
+        </thead>
+        <tbody>
+          {filtered.map(m => (
+            <tr key={m._id} style={{ borderBottom: '1px solid #eee', backgroundColor: m.isLifeMember ? '#fffef0' : 'white' }}>
+              <td style={{padding:'10px'}}><img src={m.profilePic ? `http://localhost:5000${m.profilePic}` : ''} style={{ width: '40px', height: '40px', borderRadius: '50%' }} /></td>
+              <td style={{padding:'10px'}}><strong>{m.firstName} {m.lastName}</strong> {m.isLifeMember && '⭐'}</td>
+              <td style={{padding:'10px'}}>{m.yearOfGraduation}</td>
+              <td style={{padding:'10px'}}>{m.degree}</td>
+              <td style={{padding:'10px'}}>{m.department}</td>
+              <td style={{padding:'10px'}}>{m.hall}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 };

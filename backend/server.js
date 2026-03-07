@@ -16,6 +16,7 @@ const eventRoutes = require('./routes/eventRoutes'); // Add this
 app.use('/api/alumni', alumniRoutes);
 app.use('/api/articles', articleRoutes);
 app.use('/api/events', eventRoutes); // Add this
+app.use('/uploads', express.static('uploads'));
 
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('Connected to KGP Alumni Database'))

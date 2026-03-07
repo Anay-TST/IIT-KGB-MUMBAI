@@ -32,7 +32,10 @@ const memberSchema = new mongoose.Schema({
   anniversaryDate: { type: Date },
   spouseBirthdate: { type: Date },
   numberOfChildren: { type: Number, default: 0 },
-  isApproved: { type: Boolean, default: false }, // Hidden until admin approves
+  
+  // STATUS FIELDS
+  isApproved: { type: Boolean, default: false }, 
+  isLifeMember: { type: Boolean, default: false }, 
   createdAt: { type: Date, default: Date.now }
 });
 
