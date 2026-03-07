@@ -23,7 +23,6 @@ const AdminPanel = () => {
         api.get('/api/committee')
       ]);
       setMembers(memRes.data);
-      // Sort committee by the 'order' field if it exists
       const sortedComm = commRes.data.sort((a, b) => (a.order || 0) - (b.order || 0));
       setCommittee(sortedComm);
     } catch (err) {
@@ -45,20 +44,31 @@ const AdminPanel = () => {
     try {
       const formData = new FormData();
       if (editData.profilePic === "") formData.append('removePhoto', 'true');
+      
       Object.keys(editData).forEach(key => {
-        if (['profilePic', '_id', '__v', 'createdAt'].includes(key)) return;
+        if (['profilePic', '_id', '__v', 'createdAt', 'isApproved', 'isLifeMember'].includes(key)) return;
         let value = editData[key];
+        
         const dateFields = ['birthdate', 'anniversaryDate', 'spouseBirthdate'];
         if (dateFields.includes(key) && (!value || value === "")) return;
-        if (key === 'numberOfChildren' || key === 'yearOfGraduation') value = value === "" ? 0 : Number(value);
+        
+        if (key === 'numberOfChildren' || key === 'yearOfGraduation') {
+          value = value === "" ? 0 : Number(value);
+        }
+        
         if (value === null || value === undefined) return;
         formData.append(key, value);
       });
+
       if (newPic) formData.append('profilePic', newPic);
+
       await api.put(`/api/alumni/${editData._id}`, formData);
       setEditData(null); setNewPic(null); fetchAll();
-      alert("Updated Successfully!");
-    } catch (err) { alert("Update failed"); }
+      alert("Profile Updated Successfully!");
+    } catch (err) { 
+        console.error(err);
+        alert("Update failed. Please check all required fields."); 
+    }
   };
 
   // --- COMMITTEE ACTIONS ---
@@ -69,7 +79,7 @@ const AdminPanel = () => {
       await api.post('/api/committee', { 
         memberId: selectedMemberId, 
         title: committeeTitle,
-        order: committee.length // Add to the end
+        order: committee.length 
       });
       setCommitteeTitle(''); setSelectedMemberId(''); fetchAll();
     } catch (err) { alert("Error adding to committee"); }
@@ -81,23 +91,16 @@ const AdminPanel = () => {
     }
   };
 
-  // REORDERING LOGIC
   const moveItem = async (index, direction) => {
     const newItems = [...committee];
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
     if (targetIndex < 0 || targetIndex >= newItems.length) return;
-
-    // Swap positions
     [newItems[index], newItems[targetIndex]] = [newItems[targetIndex], newItems[index]];
     setCommittee(newItems);
-
-    // Save the new order to the backend
     try {
         const orderData = newItems.map((item, idx) => ({ id: item._id, order: idx }));
         await api.patch('/api/committee/reorder', { orders: orderData });
-    } catch (err) {
-        console.error("Failed to save new order");
-    }
+    } catch (err) { console.error("Failed to save new order"); }
   };
 
   const filteredMembers = members.filter(m => 
@@ -146,9 +149,17 @@ const AdminPanel = () => {
                           <div><strong>{m.firstName} {m.lastName}</strong><br/><small>{m.email}</small></div>
                         </div>
                       </td>
-                      <td style={styles.td}>{m.isApproved ? '✅' : '⏳'}{m.isLifeMember ? ' ⭐' : ''}</td>
+                      <td style={styles.td}>
+                        {m.isApproved ? '✅ Approved' : '⏳ Pending'}
+                        {m.isLifeMember ? ' ⭐' : ''}
+                      </td>
                       <td style={styles.td}>
                         <button onClick={() => {setEditData(m); setNewPic(null);}} style={styles.btnAction}>Edit</button>
+                        {m.isApproved ? (
+                          <button onClick={() => action(m._id, 'revoke')} style={{...styles.btnAction, backgroundColor: '#6c757d'}}>Revoke</button>
+                        ) : (
+                          <button onClick={() => action(m._id, 'approve')} style={{...styles.btnAction, backgroundColor: '#28a745'}}>Approve</button>
+                        )}
                         <button onClick={() => action(m._id, 'toggleLife')} style={styles.btnLife}>Life</button>
                         <button onClick={() => del(m._id)} style={styles.btnDelete}>Del</button>
                       </td>
@@ -172,11 +183,10 @@ const AdminPanel = () => {
                     <option key={m._id} value={m._id}>{m.firstName} {m.lastName} ({m.yearOfGraduation})</option>
                   ))}
                 </select>
-                <input placeholder="Position (e.g. President)" value={committeeTitle} onChange={e => setCommitteeTitle(e.target.value)} style={{...styles.inputS, flex: 1}} />
+                <input placeholder="Position" value={committeeTitle} onChange={e => setCommitteeTitle(e.target.value)} style={{...styles.inputS, flex: 1}} />
                 <button type="submit" style={styles.btnBlue}>Add to Team</button>
               </form>
             </div>
-
             <div style={styles.tableCard}>
               <table style={styles.table}>
                 <thead style={styles.thead}>
@@ -201,36 +211,77 @@ const AdminPanel = () => {
         )}
       </div>
 
-      {/* --- EDIT MODAL --- */}
+      {/* --- EXPANDED EDIT MODAL --- */}
       {editData && (
         <div style={styles.modalOverlay}>
           <div style={styles.modalContent}>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <h2>Edit: {editData.firstName}</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+              <h2 style={{margin: 0}}>Edit Profile: {editData.firstName} {editData.lastName}</h2>
               <button onClick={() => setEditData(null)} style={{cursor:'pointer', border:'none', background:'none', fontSize:'24px'}}>✕</button>
             </div>
+            
             <div style={styles.modalScroll}>
+              
+              {/* PHOTO SECTION */}
               <h4 style={styles.secTitle}>Profile Picture</h4>
               <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '20px' }}>
-                <img src={newPic ? URL.createObjectURL(newPic) : (editData.profilePic ? `${BACKEND_URL}${editData.profilePic}` : defaultAvatar)} style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover' }} onError={(e) => e.target.src = defaultAvatar}/>
+                <img src={newPic ? URL.createObjectURL(newPic) : (editData.profilePic ? `${BACKEND_URL}${editData.profilePic}` : defaultAvatar)} style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #003366' }} onError={(e) => e.target.src = defaultAvatar}/>
                 <div>
                   <input type="file" onChange={(e) => setNewPic(e.target.files[0])} style={{display:'block', marginBottom:'5px'}} />
-                  <button onClick={() => {setEditData({...editData, profilePic: ""}); setNewPic(null);}} style={{fontSize:'11px', color:'red', cursor:'pointer', border:'none', background:'none'}}>Remove Photo</button>
+                  <button onClick={() => {setEditData({...editData, profilePic: ""}); setNewPic(null);}} style={{fontSize:'11px', color:'red', cursor:'pointer', border:'none', background:'none', padding:0}}>Remove Photo</button>
                 </div>
               </div>
-              <h4 style={styles.secTitle}>Personal & Academic</h4>
+
+              {/* PERSONAL DETAILS */}
+              <h4 style={styles.secTitle}>Personal Details</h4>
               <div style={styles.grid2}>
                 <div><label style={styles.label}>First Name</label><input value={editData.firstName || ''} onChange={e => setEditData({...editData, firstName: e.target.value})} style={styles.inputS}/></div>
                 <div><label style={styles.label}>Last Name</label><input value={editData.lastName || ''} onChange={e => setEditData({...editData, lastName: e.target.value})} style={styles.inputS}/></div>
-                <div><label style={styles.label}>Batch</label><input value={editData.yearOfGraduation || ''} onChange={e => setEditData({...editData, yearOfGraduation: e.target.value})} style={styles.inputS}/></div>
-                <div><label style={styles.label}>Hall</label><input value={editData.hall || ''} onChange={e => setEditData({...editData, hall: e.target.value})} style={styles.inputS}/></div>
+                <div><label style={styles.label}>Email</label><input type="email" value={editData.email || ''} onChange={e => setEditData({...editData, email: e.target.value})} style={styles.inputS}/></div>
+                <div><label style={styles.label}>Mobile</label><input value={editData.mobile || ''} onChange={e => setEditData({...editData, mobile: e.target.value})} style={styles.inputS}/></div>
+                <div><label style={styles.label}>Date of Birth</label><input type="date" value={editData.birthdate?.split('T')[0] || ''} onChange={e => setEditData({...editData, birthdate: e.target.value})} style={styles.inputS}/></div>
+                <div><label style={styles.label}>Sex</label>
+                    <select value={editData.sex || ''} onChange={e => setEditData({...editData, sex: e.target.value})} style={styles.inputS}>
+                        <option value="Male">Male</option><option value="Female">Female</option><option value="Other">Other</option>
+                    </select>
+                </div>
+                <div><label style={styles.label}>Marital Status</label>
+                  <select value={editData.maritalStatus || ''} onChange={e => setEditData({...editData, maritalStatus: e.target.value})} style={styles.inputS}>
+                    <option value="Single">Single</option><option value="Married">Married</option><option value="Divorced">Divorced</option><option value="Widowed">Widowed</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* ACADEMIC DETAILS */}
+              <h4 style={styles.secTitle}>IIT KGP Academic Details</h4>
+              <div style={styles.grid2}>
+                <div><label style={styles.label}>Batch Year</label><input type="number" value={editData.yearOfGraduation || ''} onChange={e => setEditData({...editData, yearOfGraduation: e.target.value})} style={styles.inputS}/></div>
                 <div><label style={styles.label}>Degree</label><input value={editData.degree || ''} onChange={e => setEditData({...editData, degree: e.target.value})} style={styles.inputS}/></div>
                 <div><label style={styles.label}>Department</label><input value={editData.department || ''} onChange={e => setEditData({...editData, department: e.target.value})} style={styles.inputS}/></div>
+                <div><label style={styles.label}>Hall</label><input value={editData.hall || ''} onChange={e => setEditData({...editData, hall: e.target.value})} style={styles.inputS}/></div>
               </div>
+
+              {/* PROFESSIONAL & ADDRESS */}
+              <h4 style={styles.secTitle}>Professional & Location</h4>
+              <div style={styles.grid2}>
+                <div style={{gridColumn: 'span 2'}}><label style={styles.label}>Current Occupation / Designation</label><input value={editData.currentOccupation || ''} onChange={e => setEditData({...editData, currentOccupation: e.target.value})} style={styles.inputS}/></div>
+                <div style={{gridColumn: 'span 2'}}><label style={styles.label}>Residence Address</label><textarea value={editData.residenceAddress || ''} onChange={e => setEditData({...editData, residenceAddress: e.target.value})} style={{...styles.inputS, height: '60px'}}/></div>
+                <div style={{gridColumn: 'span 2'}}><label style={styles.label}>Office Address</label><textarea value={editData.officeAddress || ''} onChange={e => setEditData({...editData, officeAddress: e.target.value})} style={{...styles.inputS, height: '60px'}}/></div>
+              </div>
+
+              {/* FAMILY DETAILS */}
+              <h4 style={styles.secTitle}>Family Details</h4>
+              <div style={styles.grid2}>
+                <div><label style={styles.label}>Spouse First Name</label><input value={editData.spouseFirstName || ''} onChange={e => setEditData({...editData, spouseFirstName: e.target.value})} style={styles.inputS}/></div>
+                <div><label style={styles.label}>Spouse Last Name</label><input value={editData.spouseLastName || ''} onChange={e => setEditData({...editData, spouseLastName: e.target.value})} style={styles.inputS}/></div>
+                <div><label style={styles.label}>Anniversary Date</label><input type="date" value={editData.anniversaryDate?.split('T')[0] || ''} onChange={e => setEditData({...editData, anniversaryDate: e.target.value})} style={styles.inputS}/></div>
+                <div><label style={styles.label}>No. of Children</label><input type="number" value={editData.numberOfChildren || 0} onChange={e => setEditData({...editData, numberOfChildren: e.target.value})} style={styles.inputS}/></div>
+              </div>
+
             </div>
             <div style={styles.modalFooter}>
               <button onClick={() => setEditData(null)} style={styles.btnCancel}>Cancel</button>
-              <button onClick={saveFullEdit} style={styles.btnSave}>Save Changes</button>
+              <button onClick={saveFullEdit} style={styles.btnSave}>Save All Changes</button>
             </div>
           </div>
         </div>
@@ -256,14 +307,14 @@ const styles = {
   btnDelete: { backgroundColor: '#dc3545', color: 'white', border: 'none', padding: '6px 10px', borderRadius: '4px', cursor: 'pointer' },
   btnOrder: { cursor: 'pointer', background: '#eee', border: '1px solid #ccc', marginRight: '4px', borderRadius: '3px', padding: '2px 6px' },
   modalOverlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 },
-  modalContent: { backgroundColor: 'white', padding: '25px', borderRadius: '15px', width: '800px', maxHeight: '90vh', display: 'flex', flexDirection: 'column' },
-  modalScroll: { overflowY: 'auto', paddingRight: '10px' },
-  secTitle: { borderBottom: '1px solid #eee', color: '#003366', fontWeight: 'bold', marginTop: '20px' },
+  modalContent: { backgroundColor: 'white', padding: '25px', borderRadius: '15px', width: '850px', maxHeight: '90vh', display: 'flex', flexDirection: 'column' },
+  modalScroll: { overflowY: 'auto', paddingRight: '15px' },
+  secTitle: { borderBottom: '1px solid #eee', color: '#003366', fontWeight: 'bold', marginTop: '20px', paddingBottom: '5px' },
   grid2: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginTop: '10px' },
-  label: { fontSize: '11px', fontWeight: 'bold', color: '#666' },
-  inputS: { width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '5px' },
+  label: { fontSize: '11px', fontWeight: 'bold', color: '#666', marginBottom: '5px', display: 'block' },
+  inputS: { width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '5px', boxSizing: 'border-box' },
   modalFooter: { marginTop: '20px', textAlign: 'right', borderTop: '1px solid #eee', paddingTop: '15px' },
-  btnSave: { backgroundColor: '#003366', color: 'white', padding: '10px 20px', border: 'none', borderRadius: '5px', cursor: 'pointer' },
+  btnSave: { backgroundColor: '#003366', color: 'white', padding: '10px 20px', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' },
   btnCancel: { padding: '10px 20px', cursor: 'pointer', border: '1px solid #ddd', borderRadius: '5px', marginRight: '10px' },
   loginCenter: { height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: '#001f3f' },
   loginBox: { backgroundColor: 'white', padding: '50px', borderRadius: '15px', textAlign: 'center' },
