@@ -1,35 +1,82 @@
 import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+
+// Layout Components
 import Navbar from './components/Navbar';
 import HomePage from './components/HomePage';
-// We are keeping these imported but hidden for now so the homepage looks clean!
+import MembersPage from './components/MembersPage';
+
+// Admin & Form Components
 import AddMember from './components/AddMember'; 
-import MemberDirectory from './components/MemberDirectory';
 import NewsSection from './components/NewsSection';
+import AddEvent from './components/AddEvent';
+
 import './App.css';
 
 function App() {
   return (
-    <div className="App" style={{ margin: 0, padding: 0 }}>
-      {/* 1. The Top Navigation */}
-      <Navbar />
-      
-      {/* 2. The Main Home Page Content */}
-      <HomePage />
+    <Router>
+      <div className="App" style={{ margin: 0, padding: 0 }}>
+        {/* Navigation Bar stays at the top of all pages */}
+        <Navbar />
+        
+        <Routes>
+          {/* Main Public Pages */}
+          <Route path="/" element={<HomePage />} />
+          <Route path="/members" element={<MembersPage />} />
+          
+          {/* News Page (Using the NewsSection component) */}
+          <Route path="/news" element={
+            <div style={{ padding: '40px 20px' }}>
+              <NewsSection />
+            </div>
+          } />
 
-      {/* 
-        Below is the "Admin/Directory Area". 
-        Later, we will use React Router to put these on separate pages (like /members or /admin).
-        For now, let's keep them at the very bottom so you can still use them to add data!
-      */}
-      <div style={{ marginTop: '100px', padding: '40px', backgroundColor: '#222', color: 'white' }}>
-        <h2 style={{ textAlign: 'center', color: '#FFD700' }}>--- ADMIN & DATA AREA (Temporary) ---</h2>
-        <AddMember />
-        <NewsSection />
-        <div style={{ backgroundColor: 'white', color: 'black', padding: '20px', borderRadius: '8px', marginTop: '20px' }}>
-          <MemberDirectory />
-        </div>
+          {/* Events Page Placeholder */}
+          <Route path="/events" element={
+            <div style={{ textAlign: 'center', padding: '100px 20px' }}>
+              <h1>Upcoming Events</h1>
+              <p>Check the Home page for the latest scheduled meets!</p>
+            </div>
+          } />
+
+          {/* 
+            ADMIN DASHBOARD 
+            Access this by typing /admin at the end of your URL 
+          */}
+          <Route path="/admin" element={
+            <div style={{ padding: '40px 20px', maxWidth: '800px', margin: '0 auto' }}>
+              <h1 style={{ textAlign: 'center', color: '#003366', marginBottom: '40px' }}>
+                Portal Admin Dashboard
+              </h1>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
+                <section style={{ padding: '20px', border: '1px solid #ddd', borderRadius: '12px', backgroundColor: '#fff' }}>
+                  <h2 style={{ marginTop: 0 }}>📅 Event Management</h2>
+                  <AddEvent />
+                </section>
+
+                <section style={{ padding: '20px', border: '1px solid #ddd', borderRadius: '12px', backgroundColor: '#fff' }}>
+                  <h2 style={{ marginTop: 0 }}>📰 News Management</h2>
+                  <NewsSection />
+                </section>
+
+                <section style={{ padding: '20px', border: '1px solid #ddd', borderRadius: '12px', backgroundColor: '#fff' }}>
+                  <h2 style={{ marginTop: 0 }}>👥 Member Management</h2>
+                  <AddMember />
+                </section>
+              </div>
+            </div>
+          } />
+        </Routes>
+
+        {/* Simple Footer */}
+        <footer style={{ textAlign: 'center', padding: '40px', backgroundColor: '#001f3f', color: 'white', marginTop: '60px' }}>
+          <p>© 2026 IIT Kharagpur Alumni Mumbai Chapter</p>
+          <small style={{ opacity: 0.6 }}>Servicing the KGPian spirit since 1951</small>
+        </footer>
       </div>
-    </div>
+    </Router>
   );
 }
 
