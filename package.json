@@ -4,7 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "server": "cd backend && node server.js",
+    "client": "cd frontend && npm run dev",
+    "dev": "concurrently \"npm run server\" \"npm run client\""
   },
   "repository": {
     "type": "git",
@@ -26,5 +29,8 @@
     "multer": "^2.1.1",
     "react-router-dom": "^7.13.1",
     "sharp": "^0.34.5"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
   }
 }
