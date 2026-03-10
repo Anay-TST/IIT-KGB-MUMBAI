@@ -6,7 +6,6 @@ const path = require('path');
 const fs = require('fs');
 
 // Create uploads folder if missing
-// Using a relative path that stays consistent with the server root
 const uploadDir = './uploads/';
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
@@ -17,7 +16,6 @@ const storage = multer.diskStorage({
     cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
-    // Generate a unique filename to prevent overwriting
     cb(null, Date.now() + '-' + file.originalname);
   }
 });
@@ -32,7 +30,6 @@ router.post('/', upload.single('profilePic'), async (req, res) => {
   try {
     const data = req.body;
     if (req.file) {
-      // Save the path with a leading slash for the frontend
       data.profilePic = `/uploads/${req.file.filename}`;
     }
     const member = new Member(data);
@@ -40,6 +37,32 @@ router.post('/', upload.single('profilePic'), async (req, res) => {
     res.status(201).json(member);
   } catch (err) {
     res.status(400).json({ message: err.message });
+  }
+});
+
+// POST: Bulk Import from Excel
+router.post('/bulk', async (req, res) => {
+  try {
+    const { members } = req.body;
+    
+    if (!members || !Array.isArray(members)) {
+      return res.status(400).json({ message: "Invalid data format. Expected an array." });
+    }
+
+    // Use insertMany with ordered:false so one bad row doesn't stop the whole file
+    const inserted = await Member.insertMany(members, { ordered: false });
+    
+    res.status(201).json({ message: `Successfully imported ${inserted.length} members!` });
+  } catch (err) {
+    // If some succeeded and some failed (like duplicate keys or missing required strings)
+    if (err.name === 'BulkWriteError') {
+      res.status(201).json({ 
+        message: `Import finished! Inserted ${err.insertedDocs.length} members. Skipped some rows due to duplicates or missing required fields.` 
+      });
+    } else {
+      console.error("Bulk Import Error:", err.message);
+      res.status(500).json({ message: "Failed to import members: " + err.message });
+    }
   }
 });
 
@@ -63,24 +86,19 @@ router.get('/all', async (req, res) => {
   }
 });
 
-// PUT: Full Edit (Warning fix + Path fix)
+// PUT: Full Edit
 router.put('/:id', upload.single('profilePic'), async (req, res) => {
   try {
     const updateData = { ...req.body };
     
-    // If a new file was uploaded, update the path
     if (req.file) {
       updateData.profilePic = `/uploads/${req.file.filename}`;
     }
 
-    // FIXED: Swapped 'new: true' for 'returnDocument: 'after''
     const updated = await Member.findByIdAndUpdate(
       req.params.id, 
       updateData, 
-      { 
-        returnDocument: 'after', 
-        runValidators: true 
-      }
+      { returnDocument: 'after', runValidators: true }
     );
 
     if (!updated) return res.status(404).json({ message: "Member not found" });
@@ -98,7 +116,7 @@ router.patch('/status/:id', async (req, res) => {
     if (!member) return res.status(404).json({ message: "Member not found" });
 
     if (req.query.action === 'approve') member.isApproved = true;
-    if (req.query.action === 'toggleLife') member.isLifeMember = !member.isLifeMember;
+    if (req.query.action === 'revoke') member.isApproved = false;
     
     await member.save();
     res.json(member);

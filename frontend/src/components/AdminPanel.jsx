@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
+import * as XLSX from 'xlsx';
 
 // --- CONFIGURATION ARRAYS ---
 const DEGREES = ["B.Tech", "B.Arch", "Dual Degree", "M.Tech", "M.Sc", "MBA", "Ph.D", "MS", "MCP", "MMST", "LLB", "LLM", "Other"];
 const DEPARTMENTS = ["Aerospace Engineering", "Advanced Technology Centre", "Agricultural & Food Engineering", "Architecture & Regional Planning", "Biotechnology", "Centre for Theoretical Studies", "Chemical Engineering", "Chemistry", "Civil Engineering", "Computer Science & Engineering", "Cyrogenic Engineering", "Center for Educational Technology", "Energy Science and Engineering", "Energy Engineering", "Electrical Engineering", "Electronics & Electrical Communications Engineering", "Exploration Geophysics", "GS Sanyal School of Telecommunications (GS)", "GS Sanyal School of Telecommunications (TE)", "Geology & Geophysics", "Humanities & Social Sciences", "Industrial Engineering & Management", "Instrumentation Engineering", "School of Information Technology", "Material Science", "Mathematics", "Manufacturing Engineering", "Mechanical Engineering", "Medical Science & Technology", "Metallurgical Engineering", "Mining Engineering", "Ocean Engineering & Naval Architecture", "Ocean, Rivers, Atmosphere & Land Sciences", "Physics & Meteorology", "Quality Engineering Design and Manufacturing", "Rajendra Mishra School of Engineering Entrepreneurship", "Rajeev Gandhi School of Intellectual Property Law", "Ranbir and Chitra Gupta School of Infrastructure Design and Management", "Reliability Engineering", "Rubber Technology Center", "Rural Development Centre", "School of Water Resources", "Steel Technology Centre", "Statistics and Informatics", "Vinod Gupta School of Management", "Other"];
 const HALLS = ["Ashutosh Mukherjee", "Azad", "Bhidan Chandra Roy", "Campus", "Dr. B R Ambedkar", "Gokhale", "Homi J Bhabha", "Jagadish Chandra Bose", "Lala Lajpat Rai", "Lalbahadur Sastry", "Madan Mohan Malaviya", "Meghnad Saha", "Mother Teresa", "Nehru", "Patel", "Radhakrishnan", "Rajendra Prasad", "Rani Laxmi Bai", "Sarojini Naidu / Indira Gandhi", "Vidyasagar", "Zakir Hussain", "Vikram Sarabhai Residential Complex", "Institute Quarter", "Bachelors Flat", "Rader Flats", "Other"];
 
-// --- ADDED MEMBERSHIP NUMBER HERE ---
 const ALL_FIELDS = [
   'firstName', 'lastName', 'email', 'mobile', 'birthdate', 'sex', 
   'maritalStatus', 'yearOfGraduation', 'department', 'degree', 
@@ -89,6 +89,72 @@ const AdminPanel = () => {
     } catch (err) { alert("Update failed."); }
   };
 
+  // --- EXCEL TEMPLATE GENERATOR ---
+  const downloadTemplate = () => {
+    const ws = XLSX.utils.aoa_to_sheet([ALL_FIELDS]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Template");
+    XLSX.writeFile(wb, "Alumni_Import_Template.xlsx");
+  };
+
+  // --- EXCEL BULK UPLOAD HANDLER ---
+  const handleExcelUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (evt) => {
+      try {
+        const bstr = evt.target.result;
+        const workbook = XLSX.read(bstr, { type: 'binary' });
+        const sheetName = workbook.SheetNames[0]; 
+        const worksheet = workbook.Sheets[sheetName];
+        
+        const rawData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+
+        const validData = rawData.map(row => ({
+          firstName: String(row.firstName || '').trim(),
+          lastName: String(row.lastName || '').trim(),
+          email: String(row.email || '').trim(),
+          mobile: String(row.mobile || '').trim(),
+          birthdate: row.birthdate || undefined,
+          sex: row.sex || undefined,
+          maritalStatus: row.maritalStatus || 'Single',
+          yearOfGraduation: parseInt(row.yearOfGraduation, 10) || null,
+          degree: row.degree || undefined,
+          department: row.department || undefined,
+          hall: row.hall || undefined,
+          currentOccupation: row.currentOccupation || undefined,
+          residenceAddress: row.residenceAddress || undefined,
+          officeAddress: row.officeAddress || undefined,
+          spouseFirstName: row.spouseFirstName || undefined,
+          spouseLastName: row.spouseLastName || undefined,
+          anniversaryDate: row.anniversaryDate || undefined,
+          numberOfChildren: parseInt(row.numberOfChildren, 10) || 0,
+          isLifeMember: String(row.isLifeMember).toLowerCase() === 'true',
+          membershipNumber: row.membershipNumber || undefined,
+          isApproved: true // Auto-approve via Admin Import
+        })).filter(m => m.firstName && m.lastName && m.email); // Must have at least name & email
+
+        if (validData.length === 0) {
+          alert("No valid data found. Check your column headers.");
+          return;
+        }
+
+        alert(`Processing ${validData.length} records. Please wait...`);
+        const res = await api.post('/api/alumni/bulk', { members: validData });
+        alert(res.data.message);
+        fetchAll(); // Refresh the table
+      } catch (err) {
+        console.error(err);
+        alert('Import failed. Please check your Excel file format.');
+      }
+      
+      e.target.value = null; // reset input
+    };
+    reader.readAsBinaryString(file);
+  };
+
   const addToCommittee = async (e) => {
     e.preventDefault();
     await api.post('/api/committee', { memberId: selectedMemberId, title: committeeTitle, order: committee.length });
@@ -141,7 +207,30 @@ const AdminPanel = () => {
         {activeTab === 'members' && (
           <>
             <h1>Member Management</h1>
-            <input placeholder="Search names..." onChange={(e) => setSearch(e.target.value)} style={styles.searchBar} />
+            <div style={{ display: 'flex', gap: '20px', marginBottom: '20px', alignItems: 'center', flexWrap: 'wrap' }}>
+              <input 
+                 placeholder="Search names..." 
+                 onChange={(e) => setSearch(e.target.value)} 
+                 style={{...styles.searchBar, marginBottom: 0, minWidth: '300px'}} 
+              />
+              
+              <div style={{display: 'flex', gap: '10px', marginLeft: 'auto'}}>
+                <button onClick={downloadTemplate} style={{...styles.btnBlue, backgroundColor: '#17a2b8', border: '1px solid #117a8b'}}>
+                  📥 Download Template
+                </button>
+
+                <label style={{...styles.btnBlue, cursor: 'pointer', backgroundColor: '#28a745', border: '1px solid #218838', margin: 0}}>
+                   📊 Bulk Import (Excel)
+                  <input 
+                    type="file" 
+                    accept=".xlsx, .xls, .csv" 
+                    onChange={handleExcelUpload} 
+                    style={{ display: 'none' }} 
+                  />
+                </label>
+              </div>
+            </div>
+            
             <div style={styles.tableCard}>
               <table style={styles.table}>
                 <thead><tr><th style={styles.th}>Name</th><th style={styles.th}>Contact Info</th><th style={styles.th}>Status</th><th style={styles.th}>Actions</th></tr></thead>
@@ -368,7 +457,7 @@ const styles = {
   sidebarItem: { padding: '12px', cursor: 'pointer', borderRadius: '5px', marginBottom: '5px', transition: '0.2s' },
   sidebarActive: { padding: '12px', cursor: 'pointer', borderRadius: '5px', backgroundColor: '#003366', fontWeight: 'bold', marginBottom: '5px' },
   logoutBtn: { marginTop: '40px', color: '#ff4d4d', cursor: 'pointer', padding: '12px', fontWeight: 'bold' },
-  searchBar: { padding: '10px', width: '300px', borderRadius: '5px', border: '1px solid #ddd', marginBottom: '20px', fontSize: '14px' },
+  searchBar: { padding: '10px', width: '100%', borderRadius: '5px', border: '1px solid #ddd', fontSize: '14px' },
   formCard: { backgroundColor: '#fff', padding: '20px', borderRadius: '10px', marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'center', border: '1px solid #eee' },
   tableCard: { backgroundColor: 'white', borderRadius: '10px', overflow: 'hidden', boxShadow: '0 2px 10px rgba(0,0,0,0.05)' },
   table: { width: '100%', borderCollapse: 'collapse' },
