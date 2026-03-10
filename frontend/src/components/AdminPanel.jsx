@@ -105,54 +105,73 @@ const AdminPanel = () => {
     const reader = new FileReader();
     reader.onload = async (evt) => {
       try {
-        const bstr = evt.target.result;
-        const workbook = XLSX.read(bstr, { type: 'binary' });
+        const data = new Uint8Array(evt.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
         const sheetName = workbook.SheetNames[0]; 
         const worksheet = workbook.Sheets[sheetName];
         
-        const rawData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+        // raw: false keeps dates as strings so they don't break
+        const rawData = XLSX.utils.sheet_to_json(worksheet, { defval: "", raw: false });
 
-        const validData = rawData.map(row => ({
-          firstName: String(row.firstName || '').trim(),
-          lastName: String(row.lastName || '').trim(),
-          email: String(row.email || '').trim(),
-          mobile: String(row.mobile || '').trim(),
-          birthdate: row.birthdate || undefined,
-          sex: row.sex || undefined,
-          maritalStatus: row.maritalStatus || 'Single',
-          yearOfGraduation: parseInt(row.yearOfGraduation, 10) || null,
-          degree: row.degree || undefined,
-          department: row.department || undefined,
-          hall: row.hall || undefined,
-          currentOccupation: row.currentOccupation || undefined,
-          residenceAddress: row.residenceAddress || undefined,
-          officeAddress: row.officeAddress || undefined,
-          spouseFirstName: row.spouseFirstName || undefined,
-          spouseLastName: row.spouseLastName || undefined,
-          anniversaryDate: row.anniversaryDate || undefined,
-          numberOfChildren: parseInt(row.numberOfChildren, 10) || 0,
-          isLifeMember: String(row.isLifeMember).toLowerCase() === 'true',
-          membershipNumber: row.membershipNumber || undefined,
-          isApproved: true // Auto-approve via Admin Import
-        })).filter(m => m.firstName && m.lastName && m.email); // Must have at least name & email
+        console.log("RAW EXCEL DATA:", rawData); 
 
-        if (validData.length === 0) {
-          alert("No valid data found. Check your column headers.");
+        if (rawData.length === 0) {
+          alert("The Excel file has no data rows! Please add data below the header row.");
+          e.target.value = null;
           return;
         }
 
-        alert(`Processing ${validData.length} records. Please wait...`);
+        const validData = rawData.map((row, index) => {
+          const fName = row.firstName || row['First Name'] || row.firstname || '';
+          const lName = row.lastName || row['Last Name'] || row.lastname || '';
+          const mail = row.email || row['Email'] || '';
+
+          return {
+            firstName: String(fName).trim(),
+            lastName: String(lName).trim(),
+            email: String(mail).trim(),
+            mobile: String(row.mobile || row.Mobile || '').trim(),
+            birthdate: row.birthdate || undefined,
+            sex: row.sex || undefined,
+            maritalStatus: row.maritalStatus || 'Single',
+            yearOfGraduation: parseInt(row.yearOfGraduation || row.Batch || row.batch, 10) || null,
+            degree: row.degree || undefined,
+            department: row.department || undefined,
+            hall: row.hall || undefined,
+            currentOccupation: row.currentOccupation || undefined,
+            residenceAddress: row.residenceAddress || undefined,
+            officeAddress: row.officeAddress || undefined,
+            spouseFirstName: row.spouseFirstName || undefined,
+            spouseLastName: row.spouseLastName || undefined,
+            anniversaryDate: row.anniversaryDate || undefined,
+            numberOfChildren: parseInt(row.numberOfChildren, 10) || 0,
+            isLifeMember: String(row.isLifeMember).toLowerCase() === 'true',
+            membershipNumber: row.membershipNumber || undefined,
+            isApproved: true 
+          };
+        }).filter(m => m.firstName && m.lastName && m.email); 
+
+        if (validData.length === 0) {
+          alert("Could not find firstName, lastName, and email in any row. Ensure you are using the correct Template.");
+          e.target.value = null;
+          return;
+        }
+
+        alert(`Ready to import ${validData.length} valid members. Click OK to process...`);
         const res = await api.post('/api/alumni/bulk', { members: validData });
         alert(res.data.message);
-        fetchAll(); // Refresh the table
+        fetchAll(); 
       } catch (err) {
         console.error(err);
-        alert('Import failed. Please check your Excel file format.');
+        const errorMessage = err.response?.data?.message || err.message || "Unknown error";
+        alert(`Import failed: ${errorMessage}`);
       }
       
-      e.target.value = null; // reset input
+      e.target.value = null; 
     };
-    reader.readAsBinaryString(file);
+    
+    // Using ArrayBuffer for better modern Excel support
+    reader.readAsArrayBuffer(file);
   };
 
   const addToCommittee = async (e) => {
@@ -271,7 +290,6 @@ const AdminPanel = () => {
                          ⭐ Mark as Life Member
                        </label>
                        
-                       {/* CONDITIONAL MEMBERSHIP NUMBER FIELD */}
                        {editData.isLifeMember && (
                          <div style={{marginTop: '10px', paddingTop: '10px', borderTop: '1px solid #d1d9e6'}}>
                            <label style={styles.label}>Membership Number</label>
