@@ -60,12 +60,7 @@ const MembersPage = () => {
 
       {/* 4. THE DIRECTORY LIST */}
       <section style={styles.directorySection}>
-        {!showRegisterForm && (
-          <div style={styles.sectionHeader}>
-            <h2 style={styles.sectionTitle}>Member Directory</h2>
-            <div style={styles.accentBar}></div>
-          </div>
-        )}
+        {/* The Member Directory heading was removed from here */}
         <MemberDirectory />
       </section>
       
@@ -160,10 +155,7 @@ const styles = {
     maxWidth: '1200px', 
     margin: '0 auto', 
     padding: '20px' 
-  },
-  sectionHeader: { marginBottom: '30px' },
-  sectionTitle: { fontSize: '1.8rem', color: '#001f3f', margin: 0, fontWeight: '800' },
-  accentBar: { width: '50px', height: '4px', backgroundColor: '#fbbf24', marginTop: '8px' }
+  }
 };
 
 export default MembersPage;
