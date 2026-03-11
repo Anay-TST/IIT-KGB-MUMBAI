@@ -1,17 +1,16 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
-// Standard Pages
-import DocumentsPage from "./components/DocumentsPage";
+// Public Components
+import Navbar from "./components/Navbar";
+import HomePage from "./components/HomePage";
+import MembersPage from "./components/MembersPage";
+import CommitteePage from "./components/CommitteePage";
 import EventsPage from "./components/EventsPage";
+import DocumentsPage from "./components/DocumentsPage";
 
-<<<<<<< HEAD
 // Admin Components
 import AdminPanel from './components/admin/AdminPanel';
-=======
-// Admin Panel - Updated path to include the /admin/ subfolder
-import AdminPanel from "./components/AdminPanel";
->>>>>>> 809ddae1f6aa3b19eb091e7e87a9b10aaf995b93
 
 // Styles
 import "./App.css";
@@ -20,23 +19,19 @@ function App() {
   return (
     <Router>
       <div className="App">
-        {/* Navigation or Header could go here */}
+        {/* Your custom Navbar will now appear on every page */}
+        <Navbar />
         
         <Routes>
           {/* Main Routes */}
-          <Route path="/documents" element={<DocumentsPage />} />
+          <Route path="/" element={<HomePage />} />
+          <Route path="/members" element={<MembersPage />} />
+          <Route path="/committee" element={<CommitteePage />} />
           <Route path="/events" element={<EventsPage />} />
+          <Route path="/documents" element={<DocumentsPage />} />
 
           {/* Admin Route */}
-          <Route path="/admin" element={<AdminPanel />} />
-
-          {/* Default Route */}
-          <Route path="/" element={
-            <div style={{ padding: "20px", textAlign: "center" }}>
-              <h1>Welcome to IIT KGB Mumbai</h1>
-              <p>Select a page to get started.</p>
-            </div>
-          } />
+          <Route path="/admin/*" element={<AdminPanel />} />
         </Routes>
       </div>
     </Router>
