@@ -4,12 +4,25 @@ const Member = require('../models/Member');
 const multer = require('multer');
 const fs = require('fs');
 
+<<<<<<< HEAD
+=======
+// Create uploads folder if missing
+>>>>>>> 809ddae1f6aa3b19eb091e7e87a9b10aaf995b93
 const uploadDir = './uploads/';
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
 const storage = multer.diskStorage({
+<<<<<<< HEAD
   destination: (req, file, cb) => cb(null, uploadDir),
   filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
+=======
+  destination: (req, file, cb) => {
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + '-' + file.originalname);
+  }
+>>>>>>> 809ddae1f6aa3b19eb091e7e87a9b10aaf995b93
 });
 const upload = multer({ storage: storage });
 
@@ -17,14 +30,67 @@ const upload = multer({ storage: storage });
 router.post('/register', upload.single('profilePic'), async (req, res) => {
   try {
     const data = req.body;
+<<<<<<< HEAD
     if (req.file) data.profilePic = `/uploads/${req.file.filename}`;
+=======
+    if (req.file) {
+      data.profilePic = `/uploads/${req.file.filename}`;
+    }
+>>>>>>> 809ddae1f6aa3b19eb091e7e87a9b10aaf995b93
     const member = new Member(data);
     await member.save();
     res.status(201).json(member);
   } catch (err) { res.status(400).json({ message: err.message }); }
 });
 
+<<<<<<< HEAD
 // GET: All Members
+=======
+// POST: Bulk Import from Excel
+router.post('/bulk', async (req, res) => {
+  try {
+    const { members } = req.body;
+    
+    if (!members || !Array.isArray(members)) {
+      return res.status(400).json({ message: "Invalid data format. Expected an array." });
+    }
+
+    // Use insertMany with ordered:false so one bad row doesn't stop the whole file
+    const inserted = await Member.insertMany(members, { ordered: false });
+    
+    res.status(201).json({ message: `Successfully imported ${inserted.length} members!` });
+  } catch (err) {
+    // If some succeeded and some failed (like duplicate keys or missing required strings)
+    if (err.name === 'BulkWriteError') {
+      res.status(201).json({ 
+        message: `Import finished! Inserted ${err.insertedDocs.length} members. Skipped some rows due to duplicates or missing required fields.` 
+      });
+    } else {
+      console.error("Bulk Import Error:", err.message);
+      res.status(500).json({ message: "Failed to import members: " + err.message });
+    }
+  }
+});
+
+// GET: Approved List (UPDATED TO INCLUDE LIFE MEMBERS)
+router.get('/', async (req, res) => {
+  try {
+    // This now fetches members who are marked 'isApproved: true' OR have a Life Member/General status
+    const members = await Member.find({ 
+      $or: [
+        { isApproved: true },
+        { status: { $in: ['Life Member', 'General', 'Approved'] } }
+      ]
+    }).sort({ yearOfGraduation: -1 });
+    
+    res.json(members);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// GET: All Members (for Admin)
+>>>>>>> 809ddae1f6aa3b19eb091e7e87a9b10aaf995b93
 router.get('/all', async (req, res) => {
   try {
     const members = await Member.find().sort({ createdAt: -1 });
@@ -32,18 +98,52 @@ router.get('/all', async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
+<<<<<<< HEAD
 // PATCH: Status Toggle (Approve / Revoke / Life)
+=======
+// PUT: Full Edit
+router.put('/:id', upload.single('profilePic'), async (req, res) => {
+  try {
+    const updateData = { ...req.body };
+    
+    if (req.file) {
+      updateData.profilePic = `/uploads/${req.file.filename}`;
+    }
+
+    const updated = await Member.findByIdAndUpdate(
+      req.params.id, 
+      updateData, 
+      { returnDocument: 'after', runValidators: true }
+    );
+
+    if (!updated) return res.status(404).json({ message: "Member not found" });
+    res.json(updated);
+  } catch (err) {
+    console.error("Update Error:", err.message);
+    res.status(400).json({ message: err.message });
+  }
+});
+
+// PATCH: Status Toggle
+>>>>>>> 809ddae1f6aa3b19eb091e7e87a9b10aaf995b93
 router.patch('/status/:id', async (req, res) => {
   try {
     const { action } = req.query;
     const member = await Member.findById(req.params.id);
     if (!member) return res.status(404).json({ message: "Member not found" });
 
+<<<<<<< HEAD
     if (action === 'approve') member.isApproved = true;
     else if (action === 'revoke') member.isApproved = false;
     else if (action === 'toggleLife') member.isLifeMember = !member.isLifeMember;
 
     await member.save(); // timestamps: true will update the 'updatedAt' field here
+=======
+    if (req.query.action === 'approve') member.isApproved = true;
+    if (req.query.action === 'revoke') member.isApproved = false;
+    
+    await member.save();
+>>>>>>> 809ddae1f6aa3b19eb091e7e87a9b10aaf995b93
     res.json(member);
   } catch (err) { res.status(400).json({ message: err.message }); }
 });

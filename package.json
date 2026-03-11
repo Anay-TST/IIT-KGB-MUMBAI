@@ -4,9 +4,16 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+<<<<<<< HEAD
     "start": "node index.js",
     "dev": "nodemon index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
+=======
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "server": "cd backend && node server.js",
+    "client": "cd frontend && npm run dev",
+    "dev": "concurrently \"npm run server\" \"npm run client\""
+>>>>>>> 809ddae1f6aa3b19eb091e7e87a9b10aaf995b93
   },
   "repository": {
     "type": "git",
@@ -30,6 +37,10 @@
     "sharp": "^0.34.5"
   },
   "devDependencies": {
+<<<<<<< HEAD
     "nodemon": "^3.1.14"
+=======
+    "concurrently": "^9.2.1"
+>>>>>>> 809ddae1f6aa3b19eb091e7e87a9b10aaf995b93
   }
 }

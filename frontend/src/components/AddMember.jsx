@@ -1,6 +1,91 @@
 import React, { useState } from 'react';
 import api from '../api';
 
+// --- CONFIGURATION ARRAYS ---
+const DEGREES = [
+  "B.Tech", "B.Arch", "Dual Degree", "M.Tech", "M.Sc", "MBA", 
+  "Ph.D", "MS", "MCP", "MMST", "LLB", "LLM", "Other"
+];
+
+const DEPARTMENTS = [
+  "Aerospace Engineering",
+  "Advanced Technology Centre",
+  "Agricultural & Food Engineering",
+  "Architecture & Regional Planning",
+  "Biotechnology",
+  "Centre for Theoretical Studies",
+  "Chemical Engineering",
+  "Chemistry",
+  "Civil Engineering",
+  "Computer Science & Engineering",
+  "Cyrogenic Engineering",
+  "Center for Educational Technology",
+  "Energy Science and Engineering",
+  "Energy Engineering",
+  "Electrical Engineering",
+  "Electronics & Electrical Communications Engineering",
+  "Exploration Geophysics",
+  "GS Sanyal School of Telecommunications (GS)",
+  "GS Sanyal School of Telecommunications (TE)",
+  "Geology & Geophysics",
+  "Humanities & Social Sciences",
+  "Industrial Engineering & Management",
+  "Instrumentation Engineering",
+  "School of Information Technology",
+  "Material Science",
+  "Mathematics",
+  "Manufacturing Engineering",
+  "Mechanical Engineering",
+  "Medical Science & Technology",
+  "Metallurgical Engineering",
+  "Mining Engineering",
+  "Ocean Engineering & Naval Architecture",
+  "Ocean, Rivers, Atmosphere & Land Sciences",
+  "Physics & Meteorology",
+  "Quality Engineering Design and Manufacturing",
+  "Rajendra Mishra School of Engineering Entrepreneurship",
+  "Rajeev Gandhi School of Intellectual Property Law",
+  "Ranbir and Chitra Gupta School of Infrastructure Design and Management",
+  "Reliability Engineering",
+  "Rubber Technology Center",
+  "Rural Development Centre",
+  "School of Water Resources",
+  "Steel Technology Centre",
+  "Statistics and Informatics",
+  "Vinod Gupta School of Management",
+  "Other"
+];
+
+const HALLS = [
+  "Ashutosh Mukherjee",
+  "Azad",
+  "Bhidan Chandra Roy",
+  "Campus",
+  "Dr. B R Ambedkar",
+  "Gokhale",
+  "Homi J Bhabha",
+  "Jagadish Chandra Bose",
+  "Lala Lajpat Rai",
+  "Lalbahadur Sastry",
+  "Madan Mohan Malaviya",
+  "Meghnad Saha",
+  "Mother Teresa",
+  "Nehru",
+  "Patel",
+  "Radhakrishnan",
+  "Rajendra Prasad",
+  "Rani Laxmi Bai",
+  "Sarojini Naidu / Indira Gandhi",
+  "Vidyasagar",
+  "Zakir Hussain",
+  "Vikram Sarabhai Residential Complex",
+  "Institute Quarter",
+  "Bachelors Flat",
+  "Rader Flats",
+  "Other"
+];
+// ----------------------------
+
 const AddMember = ({ onSuccess }) => {
   const [formData, setFormData] = useState({
     firstName: '', 
@@ -57,6 +142,7 @@ const AddMember = ({ onSuccess }) => {
   };
 
   return (
+<<<<<<< HEAD
     <form onSubmit={handleSubmit} style={styles.form}>
       {/* SECTION 1: PERSONAL IDENTITY */}
       <h3 style={styles.sectionTitle}>1. Personal Identity</h3>
@@ -83,6 +169,83 @@ const AddMember = ({ onSuccess }) => {
         <div style={styles.inputGroup}>
           <label style={styles.label}>Birthdate *</label>
           <input name="birthdate" type="date" required onChange={handleChange} style={styles.input} />
+=======
+    <div style={styles.container}>
+      <h2 style={styles.mainTitle}>IIT KGP Alumni Registration</h2>
+      <form onSubmit={handleSubmit}>
+        
+        {/* --- SECTION 1: PERSONAL DETAILS --- */}
+        <div style={styles.section}>
+          <h4 style={styles.sectionTitle}>Personal Details</h4>
+          <div style={styles.row}>
+            <div style={styles.flex1}>
+              <label style={styles.label}>Profile Picture</label>
+              <input type="file" onChange={e => setFile(e.target.files[0])} style={styles.fileInput} />
+            </div>
+          </div>
+          <div style={styles.grid2}>
+            <div><label style={styles.label}>First Name *</label><input name="firstName" onChange={handleChange} required style={styles.input} /></div>
+            <div><label style={styles.label}>Last Name *</label><input name="lastName" onChange={handleChange} required style={styles.input} /></div>
+            <div><label style={styles.label}>Email Address *</label><input name="email" type="email" onChange={handleChange} required style={styles.input} /></div>
+            <div><label style={styles.label}>Mobile Number *</label><input name="mobile" onChange={handleChange} required style={styles.input} /></div>
+            <div><label style={styles.label}>Date of Birth *</label><input name="birthdate" type="date" onChange={handleChange} required style={styles.input} /></div>
+            <div>
+              <label style={styles.label}>Sex *</label>
+              <select name="sex" value={formData.sex} onChange={handleChange} required style={styles.input}>
+                <option value="" disabled>Select</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div>
+              <label style={styles.label}>Marital Status *</label>
+              <select name="maritalStatus" value={formData.maritalStatus} onChange={handleChange} required style={styles.input}>
+                <option value="Single">Single</option>
+                <option value="Married">Married</option>
+                <option value="Divorced">Divorced</option>
+                <option value="Separated">Separated</option>
+                <option value="Widowed">Widowed</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* --- SECTION 2: ACADEMIC DETAILS --- */}
+        <div style={styles.section}>
+          <h4 style={styles.sectionTitle}>IIT KGP Academic Details</h4>
+          <div style={styles.grid2}>
+            <div><label style={styles.label}>Batch Year *</label><input name="yearOfGraduation" type="number" onChange={handleChange} required style={styles.input} /></div>
+            
+            {/* Degree Dropdown */}
+            <div>
+              <label style={styles.label}>Degree *</label>
+              <select name="degree" value={formData.degree} onChange={handleChange} required style={styles.input}>
+                <option value="" disabled>Select Degree</option>
+                {DEGREES.map(deg => <option key={deg} value={deg}>{deg}</option>)}
+              </select>
+            </div>
+
+            {/* Department Dropdown */}
+            <div>
+              <label style={styles.label}>Department *</label>
+              <select name="department" value={formData.department} onChange={handleChange} required style={styles.input}>
+                <option value="" disabled>Select Department</option>
+                {DEPARTMENTS.map(dep => <option key={dep} value={dep}>{dep}</option>)}
+              </select>
+            </div>
+
+            {/* Hall Dropdown */}
+            <div>
+              <label style={styles.label}>Hall of Residence *</label>
+              <select name="hall" value={formData.hall} onChange={handleChange} required style={styles.input}>
+                <option value="" disabled>Select Hall</option>
+                {HALLS.map(h => <option key={h} value={h}>{h}</option>)}
+              </select>
+            </div>
+            
+          </div>
+>>>>>>> 809ddae1f6aa3b19eb091e7e87a9b10aaf995b93
         </div>
         <div style={styles.inputGroup}>
           <label style={styles.label}>Sex *</label>

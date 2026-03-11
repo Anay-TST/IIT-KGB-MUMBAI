@@ -7,7 +7,7 @@ router.get('/', async (req, res) => {
   try {
     const committee = await CommitteeMember.find()
       .populate('member')
-      .sort('order');
+      .sort('order'); // Sorts by the order number automatically
     res.json(committee);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -29,10 +29,40 @@ router.post('/', async (req, res) => {
   }
 });
 
+// PATCH: Bulk reorder committee members
+router.patch('/reorder', async (req, res) => {
+  try {
+    const { orders } = req.body; // Expects an array like [{ id: '...', order: 0 }, { id: '...', order: 1 }]
+    
+    if (!orders || !Array.isArray(orders)) {
+      return res.status(400).json({ message: "Invalid data format for reordering." });
+    }
+
+    // Prepare bulk operations for MongoDB to update all orders efficiently
+    const bulkOps = orders.map(item => ({
+      updateOne: {
+        filter: { _id: item.id },
+        update: { order: item.order }
+      }
+    }));
+
+    // Execute all updates at once
+    await CommitteeMember.bulkWrite(bulkOps);
+
+    res.json({ message: "Committee order updated successfully" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 // DELETE: Remove from committee
 router.delete('/:id', async (req, res) => {
-  await CommitteeMember.findByIdAndDelete(req.params.id);
-  res.json({ message: "Removed from Committee" });
+  try {
+    await CommitteeMember.findByIdAndDelete(req.params.id);
+    res.json({ message: "Removed from Committee" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 });
 
 module.exports = router;

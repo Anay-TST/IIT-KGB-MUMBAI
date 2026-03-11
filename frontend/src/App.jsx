@@ -1,82 +1,46 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
-// Layout Components
-import Navbar from './components/Navbar';
-import HomePage from './components/HomePage';
-import MembersPage from './components/MembersPage';
-import MemberDirectory from './components/MemberDirectory';
-import CommitteePage from './components/CommitteePage';
-import DocumentsPage from './components/DocumentsPage';
-import EventsPage from './components/EventsPage'; // Integrated actual component
+// Standard Pages
+import DocumentsPage from "./components/DocumentsPage";
+import EventsPage from "./components/EventsPage";
 
+<<<<<<< HEAD
 // Admin Components
 import AdminPanel from './components/admin/AdminPanel';
+=======
+// Admin Panel - Updated path to include the /admin/ subfolder
+import AdminPanel from "./components/AdminPanel";
+>>>>>>> 809ddae1f6aa3b19eb091e7e87a9b10aaf995b93
 
-import './App.css';
+// Styles
+import "./App.css";
 
 function App() {
   return (
     <Router>
-      <div className="App" style={{ margin: 0, padding: 0, minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <div className="App">
+        {/* Navigation or Header could go here */}
         
-        {/* Navigation Bar - Global */}
-        <Navbar />
-        
-        {/* Main Content Area */}
-        <div style={{ flex: 1 }}>
-          <Routes>
-            {/* Main Public Pages */}
-            <Route path="/" element={<HomePage />} />
-            
-            {/* Membership & Directory */}
-            <Route path="/members" element={<MembersPage />} />
-            <Route path="/directory" element={<MemberDirectory />} />
-            
-            {/* Chapter Organization */}
-            <Route path="/committee" element={<CommitteePage />} />
-            <Route path="/documents" element={<DocumentsPage />} />
-            
-            {/* Events - Upcoming & Past Memories */}
-            <Route path="/events" element={<EventsPage />} />
+        <Routes>
+          {/* Main Routes */}
+          <Route path="/documents" element={<DocumentsPage />} />
+          <Route path="/events" element={<EventsPage />} />
 
-            {/* Admin Dashboard */}
-            <Route path="/admin" element={<AdminPanel />} />
-          </Routes>
-        </div>
+          {/* Admin Route */}
+          <Route path="/admin" element={<AdminPanel />} />
 
-        {/* Global Footer */}
-        <footer style={styles.footer}>
-          <div style={styles.footerContent}>
-            <h3 style={{ margin: '0 0 10px 0', color: '#ffcc00' }}>IIT Kharagpur Alumni Foundation</h3>
-            <p style={{ margin: '5px 0' }}>Mumbai Chapter</p>
-            <div style={styles.divider}></div>
-            <p style={{ fontSize: '0.9rem', opacity: 0.8 }}>© 2026 | Servicing the KGPian spirit since 1951</p>
-          </div>
-        </footer>
+          {/* Default Route */}
+          <Route path="/" element={
+            <div style={{ padding: "20px", textAlign: "center" }}>
+              <h1>Welcome to IIT KGB Mumbai</h1>
+              <p>Select a page to get started.</p>
+            </div>
+          } />
+        </Routes>
       </div>
     </Router>
   );
 }
-
-const styles = {
-  footer: {
-    textAlign: 'center',
-    padding: '60px 20px',
-    backgroundColor: '#001f3f', // Navy Blue
-    color: 'white',
-    marginTop: 'auto' // Pushes footer to bottom if page content is short
-  },
-  footerContent: {
-    maxWidth: '1200px',
-    margin: '0 auto'
-  },
-  divider: {
-    width: '40px',
-    height: '2px',
-    backgroundColor: '#ffcc00',
-    margin: '15px auto'
-  }
-};
 
 export default App;
