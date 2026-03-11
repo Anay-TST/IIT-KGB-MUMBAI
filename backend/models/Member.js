@@ -6,8 +6,7 @@ const memberSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   countryCode: { type: String, default: '+91' },
   mobile: { 
-    type: String, 
-    required: true,
+    type: String, required: true,
     validate: {
       validator: function(v) { return /^\d{10}$/.test(v); },
       message: 'Mobile number must be exactly 10 digits'
@@ -15,11 +14,7 @@ const memberSchema = new mongoose.Schema({
   },
   birthdate: { type: Date, required: true },
   sex: { type: String, required: true },
-  maritalStatus: { 
-    type: String, 
-    enum: ['Single', 'Married', 'Divorced', 'Separated', 'Widowed'], 
-    required: true 
-  },
+  maritalStatus: { type: String, required: true },
   yearOfGraduation: { type: Number, required: true },
   department: { type: String, required: true },
   degree: { type: String, required: true },
@@ -28,21 +23,15 @@ const memberSchema = new mongoose.Schema({
   currentOccupation: { type: String },
   residenceAddress: { type: String, required: true },
   officeAddress: { type: String },
-  
-  // PHOTO FIELD (Crucial for fixing the undefined error)
   profilePic: { type: String }, 
-
-  // FAMILY DETAILS
   spouseFirstName: { type: String },
   spouseLastName: { type: String },
   anniversaryDate: { type: Date },
   spouseBirthdate: { type: Date },
   numberOfChildren: { type: Number, default: 0 },
-  
-  // STATUS FIELDS
+  referredBy: { type: String },
   isApproved: { type: Boolean, default: false }, 
-  isLifeMember: { type: Boolean, default: false }, 
-  createdAt: { type: Date, default: Date.now }
-});
+  isLifeMember: { type: Boolean, default: false }
+}, { timestamps: true }); // This line enables createdAt and updatedAt automatically
 
 module.exports = mongoose.model('Member', memberSchema);

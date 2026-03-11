@@ -11,7 +11,7 @@ import DocumentsPage from './components/DocumentsPage';
 import EventsPage from './components/EventsPage'; // Integrated actual component
 
 // Admin Components
-import AdminPanel from './components/AdminPanel';
+import AdminPanel from './components/admin/AdminPanel';
 
 import './App.css';
 
