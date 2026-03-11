@@ -142,7 +142,6 @@ const AddMember = ({ onSuccess }) => {
   };
 
   return (
-<<<<<<< HEAD
     <form onSubmit={handleSubmit} style={styles.form}>
       {/* SECTION 1: PERSONAL IDENTITY */}
       <h3 style={styles.sectionTitle}>1. Personal Identity</h3>
@@ -169,83 +168,6 @@ const AddMember = ({ onSuccess }) => {
         <div style={styles.inputGroup}>
           <label style={styles.label}>Birthdate *</label>
           <input name="birthdate" type="date" required onChange={handleChange} style={styles.input} />
-=======
-    <div style={styles.container}>
-      <h2 style={styles.mainTitle}>IIT KGP Alumni Registration</h2>
-      <form onSubmit={handleSubmit}>
-        
-        {/* --- SECTION 1: PERSONAL DETAILS --- */}
-        <div style={styles.section}>
-          <h4 style={styles.sectionTitle}>Personal Details</h4>
-          <div style={styles.row}>
-            <div style={styles.flex1}>
-              <label style={styles.label}>Profile Picture</label>
-              <input type="file" onChange={e => setFile(e.target.files[0])} style={styles.fileInput} />
-            </div>
-          </div>
-          <div style={styles.grid2}>
-            <div><label style={styles.label}>First Name *</label><input name="firstName" onChange={handleChange} required style={styles.input} /></div>
-            <div><label style={styles.label}>Last Name *</label><input name="lastName" onChange={handleChange} required style={styles.input} /></div>
-            <div><label style={styles.label}>Email Address *</label><input name="email" type="email" onChange={handleChange} required style={styles.input} /></div>
-            <div><label style={styles.label}>Mobile Number *</label><input name="mobile" onChange={handleChange} required style={styles.input} /></div>
-            <div><label style={styles.label}>Date of Birth *</label><input name="birthdate" type="date" onChange={handleChange} required style={styles.input} /></div>
-            <div>
-              <label style={styles.label}>Sex *</label>
-              <select name="sex" value={formData.sex} onChange={handleChange} required style={styles.input}>
-                <option value="" disabled>Select</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-            <div>
-              <label style={styles.label}>Marital Status *</label>
-              <select name="maritalStatus" value={formData.maritalStatus} onChange={handleChange} required style={styles.input}>
-                <option value="Single">Single</option>
-                <option value="Married">Married</option>
-                <option value="Divorced">Divorced</option>
-                <option value="Separated">Separated</option>
-                <option value="Widowed">Widowed</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        {/* --- SECTION 2: ACADEMIC DETAILS --- */}
-        <div style={styles.section}>
-          <h4 style={styles.sectionTitle}>IIT KGP Academic Details</h4>
-          <div style={styles.grid2}>
-            <div><label style={styles.label}>Batch Year *</label><input name="yearOfGraduation" type="number" onChange={handleChange} required style={styles.input} /></div>
-            
-            {/* Degree Dropdown */}
-            <div>
-              <label style={styles.label}>Degree *</label>
-              <select name="degree" value={formData.degree} onChange={handleChange} required style={styles.input}>
-                <option value="" disabled>Select Degree</option>
-                {DEGREES.map(deg => <option key={deg} value={deg}>{deg}</option>)}
-              </select>
-            </div>
-
-            {/* Department Dropdown */}
-            <div>
-              <label style={styles.label}>Department *</label>
-              <select name="department" value={formData.department} onChange={handleChange} required style={styles.input}>
-                <option value="" disabled>Select Department</option>
-                {DEPARTMENTS.map(dep => <option key={dep} value={dep}>{dep}</option>)}
-              </select>
-            </div>
-
-            {/* Hall Dropdown */}
-            <div>
-              <label style={styles.label}>Hall of Residence *</label>
-              <select name="hall" value={formData.hall} onChange={handleChange} required style={styles.input}>
-                <option value="" disabled>Select Hall</option>
-                {HALLS.map(h => <option key={h} value={h}>{h}</option>)}
-              </select>
-            </div>
-            
-          </div>
->>>>>>> 809ddae1f6aa3b19eb091e7e87a9b10aaf995b93
         </div>
         <div style={styles.inputGroup}>
           <label style={styles.label}>Sex *</label>
