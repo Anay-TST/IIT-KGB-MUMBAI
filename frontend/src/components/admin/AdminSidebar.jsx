@@ -1,4 +1,5 @@
 import React from 'react';
+import styles from './AdminStyles';
 
 const AdminSidebar = ({ activeTab, setActiveTab, setAuth }) => {
   return (
@@ -11,13 +12,6 @@ const AdminSidebar = ({ activeTab, setActiveTab, setAuth }) => {
       <div onClick={() => setAuth(false)} style={styles.logoutBtn}>🚪 Logout</div>
     </div>
   );
-};
-
-const styles = {
-  sidebar: { width: '220px', backgroundColor: '#001f3f', color: 'white', padding: '20px', position: 'fixed', height: '100vh', boxSizing: 'border-box' },
-  sidebarItem: { padding: '12px', cursor: 'pointer', borderRadius: '5px', marginBottom: '5px', transition: '0.2s' },
-  sidebarActive: { padding: '12px', cursor: 'pointer', borderRadius: '5px', backgroundColor: '#003366', fontWeight: 'bold', marginBottom: '5px' },
-  logoutBtn: { marginTop: '40px', color: '#ff4d4d', cursor: 'pointer', padding: '12px', fontWeight: 'bold' },
 };
 
 export default AdminSidebar;

@@ -66,10 +66,17 @@ router.post('/bulk', async (req, res) => {
   }
 });
 
-// GET: Approved List (for Directory)
+// GET: Approved List (UPDATED TO INCLUDE LIFE MEMBERS)
 router.get('/', async (req, res) => {
   try {
-    const members = await Member.find({ isApproved: true }).sort({ yearOfGraduation: -1 });
+    // This now fetches members who are marked 'isApproved: true' OR have a Life Member/General status
+    const members = await Member.find({ 
+      $or: [
+        { isApproved: true },
+        { status: { $in: ['Life Member', 'General', 'Approved'] } }
+      ]
+    }).sort({ yearOfGraduation: -1 });
+    
     res.json(members);
   } catch (err) {
     res.status(500).json({ message: err.message });
