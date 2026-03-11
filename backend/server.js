@@ -4,8 +4,8 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path');
 
-// Load Environment Variables
-dotenv.config();
+// 🚨 FIX: Explicitly tell dotenv to look in the backend folder for the .env file
+dotenv.config({ path: path.join(__dirname, '.env') });
 
 const app = express();
 
