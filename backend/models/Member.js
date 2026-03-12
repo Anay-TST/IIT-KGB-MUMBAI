@@ -42,7 +42,13 @@ const memberSchema = new mongoose.Schema({
   isApproved: { type: Boolean, default: false },
   isLifeMember: { type: Boolean, default: false },
   lifeMemberNumber: { type: String },
-  membershipNumber: { type: String }
+  membershipNumber: { type: String },
+
+  // --- NEW: AUTHENTICATION FIELDS ---
+  password: { type: String },
+  resetPasswordToken: { type: String },
+  resetPasswordExpires: { type: Date }
+
 }, { timestamps: true });
 
 module.exports = mongoose.model('Member', memberSchema);

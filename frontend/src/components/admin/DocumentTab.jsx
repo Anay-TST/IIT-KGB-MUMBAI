@@ -83,7 +83,7 @@ const DocumentTab = ({ docs, refresh }) => {
             <tr>
               <th style={styles.th}>Date Uploaded</th>
               <th style={styles.th}>Title</th>
-              <th style={styles.th} style={{ textAlign: 'right', paddingRight: '20px' }}>Actions</th>
+              <th style={{ ...styles.th, textAlign: 'right', paddingRight: '20px' }}>Actions</th>
             </tr>
           </thead>
           <tbody>
