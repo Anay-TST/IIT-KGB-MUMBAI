@@ -2,20 +2,56 @@ import React, { useState } from 'react';
 import * as XLSX from 'xlsx';
 import api from '../../api';
 
-// --- THE STRICT MASTER LIST ---
-// I added "countryCode" right next to "mobile".
 const EXCEL_COLUMNS = [
   "firstName", "lastName", "email", "countryCode", "mobile", "birthdate", "sex", "maritalStatus",
   "yearOfGraduation", "degree", "department", "hall", 
   "currentOccupation", "residenceAddress", "officeAddress", 
-  "spouseFirstName", "spouseLastName", "anniversaryDate", "numberOfChildren", 
+  "spouseFirstName", "spouseLastName", "spouseBirthdate", "anniversaryDate", "numberOfChildren", 
   "lifeMemberNumber", "isLifeMember", "isApproved", "status", "referredBy"
 ];
+
+// 1. Helper to format dates FOR EXPORT (Outputs: DD/MM/YYYY)
+const formatToDDMMYYYY = (dateString) => {
+  if (!dateString) return ''; 
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return ''; 
+
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0'); 
+  const year = date.getFullYear();
+
+  return `${day}/${month}/${year}`;
+};
+
+// 2. NEW: Helper to parse dates FROM IMPORT (Reads: DD/MM/YYYY -> Outputs: YYYY-MM-DD)
+const parseImportDate = (dateVal) => {
+  if (!dateVal) return null;
+
+  // If Excel sends it as a raw serial number (e.g., 45000)
+  if (typeof dateVal === 'number') {
+    return new Date((dateVal - 25569) * 86400 * 1000).toISOString();
+  }
+
+  // If it comes in as our DD/MM/YYYY string
+  if (typeof dateVal === 'string') {
+    // Check if it has slashes
+    if (dateVal.includes('/')) {
+      const parts = dateVal.split('/');
+      if (parts.length === 3) {
+        // parts[0] is Day, parts[1] is Month, parts[2] is Year
+        // Reassemble into standard YYYY-MM-DD for the database
+        return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+      }
+    }
+  }
+
+  // Fallback for any other valid format
+  return dateVal;
+};
 
 const DatabaseTab = ({ refresh }) => {
   const [loading, setLoading] = useState(false);
 
-  // --- 1. DOWNLOAD FULL TEMPLATE ---
   const downloadTemplate = () => {
     const dummyRow = {};
     EXCEL_COLUMNS.forEach(col => {
@@ -28,7 +64,6 @@ const DatabaseTab = ({ refresh }) => {
     XLSX.writeFile(wb, "Full_Alumni_Template.xlsx");
   };
 
-  // --- 2. EXPORT DATABASE (WITH STRICT FILTERING) ---
   const handleExport = async () => {
     setLoading(true);
     try {
@@ -39,15 +74,17 @@ const DatabaseTab = ({ refresh }) => {
         return;
       }
 
-      // THE FIX: Strict Mapping
-      // Instead of just taking what MongoDB gives us, we build a brand new object
-      // for every member using ONLY the columns defined in our Master List.
-      // This automatically strips out ghosts like "membershipNumber".
       const cleanData = data.map(member => {
         const strictMember = {};
         EXCEL_COLUMNS.forEach(col => {
-          // If the field exists, copy it. If it doesn't, put an empty string.
-          strictMember[col] = member[col] !== undefined && member[col] !== null ? member[col] : "";
+          let val = member[col] !== undefined && member[col] !== null ? member[col] : "";
+
+          // Format dates going OUT to Excel
+          if (val && ['birthdate', 'spouseBirthdate', 'anniversaryDate'].includes(col)) {
+            val = formatToDDMMYYYY(val);
+          }
+
+          strictMember[col] = val;
         });
         return strictMember;
       });
@@ -66,7 +103,6 @@ const DatabaseTab = ({ refresh }) => {
     }
   };
 
-  // --- 3. IMPORT EXCEL FILE ---
   const handleImport = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -86,7 +122,18 @@ const DatabaseTab = ({ refresh }) => {
             return;
         }
 
-        const response = await api.post('/api/alumni/bulk', { members: rawData });
+        // NEW: Intercept and clean the incoming data
+        const cleanedData = rawData.map(row => {
+          const cleanRow = { ...row };
+          // Translate dates coming IN from Excel
+          if (cleanRow.birthdate) cleanRow.birthdate = parseImportDate(cleanRow.birthdate);
+          if (cleanRow.spouseBirthdate) cleanRow.spouseBirthdate = parseImportDate(cleanRow.spouseBirthdate);
+          if (cleanRow.anniversaryDate) cleanRow.anniversaryDate = parseImportDate(cleanRow.anniversaryDate);
+          return cleanRow;
+        });
+
+        // Send the cleaned data to the backend
+        const response = await api.post('/api/alumni/bulk', { members: cleanedData });
         alert(response.data.message);
         if (refresh) refresh();
 
@@ -101,7 +148,6 @@ const DatabaseTab = ({ refresh }) => {
     reader.readAsBinaryString(file);
   };
 
-  // --- 4. CLEAR DATABASE ---
   const handleClearDatabase = async () => {
     const firstWarning = window.confirm("⚠️ DELETE ALL MEMBERS? (Cannot be undone)");
     if (!firstWarning) return;
