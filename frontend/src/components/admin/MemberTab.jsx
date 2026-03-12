@@ -5,10 +5,10 @@ const MemberTab = ({ members, refresh }) => {
   const [search, setSearch] = useState('');
   const [editData, setEditData] = useState(null);
   const [loading, setLoading] = useState(false);
-
+  
+  const [newProfilePic, setNewProfilePic] = useState(null);
   const defaultAvatar = 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
 
-  // --- HELPER: SAFE DATE RENDERING ---
   const renderDate = (dateStr) => {
     const date = new Date(dateStr);
     if (!dateStr || isNaN(date.getTime())) return null;
@@ -30,20 +30,63 @@ const MemberTab = ({ members, refresh }) => {
     }
   };
 
+  const deleteMember = async (id, name) => {
+    const isConfirmed = window.confirm(`Are you absolutely sure you want to permanently delete ${name}? This action cannot be undone.`);
+    if (isConfirmed) {
+      try {
+        await api.delete(`/api/alumni/${id}`);
+        await refresh();
+        alert(`${name} has been deleted.`);
+      } catch (err) {
+        console.error("Delete Error:", err);
+        alert("Failed to delete member. Check console for details.");
+      }
+    }
+  };
+
   const saveEdit = async () => {
     setLoading(true);
     try {
-      const payload = { ...editData };
-      delete payload._id; delete payload.__v; delete payload.createdAt; delete payload.updatedAt;
-      await api.put(`/api/alumni/${editData._id}`, payload);
-      setEditData(null);
+      if (newProfilePic) {
+        const formData = new FormData();
+        Object.keys(editData).forEach(key => {
+          if (!['_id', '__v', 'createdAt', 'updatedAt', 'profilePic'].includes(key) && editData[key] !== null && editData[key] !== undefined) {
+            formData.append(key, String(editData[key])); 
+          }
+        });
+        
+        formData.append('profilePic', newProfilePic);
+
+        const response = await fetch(`${BACKEND_URL}/api/alumni/${editData._id}`, {
+          method: 'PUT',
+          body: formData, 
+        });
+
+        if (!response.ok) {
+          const errorMessage = await response.text();
+          throw new Error(`Server rejected the file: ${errorMessage}`);
+        }
+        
+      } else {
+        const payload = { ...editData };
+        delete payload._id; delete payload.__v; delete payload.createdAt; delete payload.updatedAt;
+        await api.put(`/api/alumni/${editData._id}`, payload);
+      }
+
+      closeModal();
       await refresh();
       alert("Member updated successfully");
     } catch (err) {
-      alert("Update failed");
+      console.error("Upload Error:", err);
+      alert("Update failed! Right-click > Inspect > click 'Console' to see the exact error.");
     } finally {
       setLoading(false);
     }
+  };
+
+  const closeModal = () => {
+    setEditData(null);
+    setNewProfilePic(null);
   };
 
   return (
@@ -87,7 +130,6 @@ const MemberTab = ({ members, refresh }) => {
                     <div style={styles.dateLabel}>Reg: {renderDate(m.createdAt) || 'N/A'}</div>
                     {m.isApproved && (
                         <div style={{...styles.dateLabel, color: '#16a34a', fontWeight: 'bold'}}>
-                            {/* FALLBACK: If updatedAt is missing, show createdAt */}
                             App: {renderDate(m.updatedAt) || renderDate(m.createdAt) || 'Approved'}
                         </div>
                     )}
@@ -95,21 +137,31 @@ const MemberTab = ({ members, refresh }) => {
                   <td style={styles.td}>
                     <div style={styles.actionGroup}>
                       <button onClick={() => setEditData(m)} style={styles.btnEdit}>Edit</button>
+                      
                       <button 
                         onClick={() => memberAction(m._id, m.isApproved ? 'revoke' : 'approve')} 
                         style={{ 
                           ...styles.btnStatus, 
-                          backgroundColor: m.isApproved ? '#dc2626' : '#16a34a', 
+                          backgroundColor: m.isApproved ? '#d97706' : '#16a34a', 
                           color: 'white' 
                         }}
                       >
                         {m.isApproved ? 'Revoke' : 'Approve'}
                       </button>
+                      
                       <button 
                         onClick={() => memberAction(m._id, 'toggleLife')} 
                         style={{...styles.btnLife, background: m.isLifeMember ? '#fbbf24' : '#fff'}}
                       >
                         {m.isLifeMember ? 'Life Member' : 'Set Life'}
+                      </button>
+
+                      <button 
+                        onClick={() => deleteMember(m._id, `${m.firstName} ${m.lastName}`)} 
+                        style={styles.btnDelete}
+                        title="Delete Member Permanently"
+                      >
+                        🗑️ Delete
                       </button>
                     </div>
                   </td>
@@ -119,15 +171,33 @@ const MemberTab = ({ members, refresh }) => {
         </table>
       </div>
 
-      {/* --- FULL EDIT MODAL --- */}
       {editData && (
         <div style={styles.overlay}>
           <div style={styles.modal}>
             <div style={styles.modalHeader}>
               <h3 style={{margin:0}}>Full Member Edit</h3>
-              <button onClick={() => setEditData(null)} style={styles.closeX}>&times;</button>
+              <button onClick={closeModal} style={styles.closeX}>&times;</button>
             </div>
             <div style={styles.modalBody}>
+              
+              <h4 style={styles.sectionTitle}>Profile Picture</h4>
+              <div style={{ display: 'flex', gap: '20px', alignItems: 'center', marginBottom: '20px' }}>
+                <img 
+                  src={editData.profilePic ? `${BACKEND_URL}${editData.profilePic}` : defaultAvatar} 
+                  alt="Current Profile" 
+                  style={{ width: '70px', height: '70px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #eee' }} 
+                />
+                <div style={styles.field}>
+                  <label style={styles.label}>Upload New Picture (Optional)</label>
+                  <input 
+                    type="file" 
+                    accept="image/png, image/jpeg, image/jpg"
+                    onChange={e => setNewProfilePic(e.target.files[0])} 
+                    style={{ ...styles.input, padding: '5px' }} 
+                  />
+                </div>
+              </div>
+
               <h4 style={styles.sectionTitle}>1. Personal Identity</h4>
               <div style={styles.formGrid}>
                 <div style={styles.field}><label style={styles.label}>First Name</label><input value={editData.firstName || ''} onChange={e => setEditData({...editData, firstName: e.target.value})} style={styles.input} /></div>
@@ -160,9 +230,16 @@ const MemberTab = ({ members, refresh }) => {
                 <div style={styles.field}><label style={styles.label}>Children</label><input type="number" value={editData.numberOfChildren || 0} onChange={e => setEditData({...editData, numberOfChildren: e.target.value})} style={styles.input} /></div>
               </div>
             </div>
+            
+            {/* --- NEW: UPDATED MODAL FOOTER WITH CANCEL BUTTON --- */}
             <div style={styles.modalFooter}>
-                <button onClick={saveEdit} disabled={loading} style={styles.btnSave}>{loading ? 'Saving...' : 'Save Member Data'}</button>
+                <button onClick={closeModal} style={styles.btnCancel}>Discard Changes</button>
+                <button onClick={saveEdit} disabled={loading} style={styles.btnSave}>
+                  {loading ? 'Saving...' : 'Save Member Data'}
+                </button>
             </div>
+            {/* ---------------------------------------------------- */}
+
           </div>
         </div>
       )}
@@ -187,6 +264,7 @@ const styles = {
   btnEdit: { padding: '6px 12px', borderRadius: '6px', border: 'none', background: '#f0f0f0', cursor: 'pointer', fontWeight: 'bold' },
   btnStatus: { padding: '6px 12px', borderRadius: '6px', border: 'none', cursor: 'pointer', minWidth: '85px', fontWeight: 'bold' },
   btnLife: { padding: '6px 12px', borderRadius: '6px', border: '1px solid #fbbf24', cursor: 'pointer', fontWeight: 'bold' },
+  btnDelete: { padding: '6px 12px', borderRadius: '6px', border: 'none', background: '#fee2e2', color: '#dc2626', cursor: 'pointer', fontWeight: 'bold', minWidth: '85px' },
   overlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, backdropFilter: 'blur(4px)' },
   modal: { background: '#fff', width: '750px', maxHeight: '95vh', borderRadius: '20px', overflow: 'hidden', display: 'flex', flexDirection:'column' },
   modalHeader: { padding: '15px 25px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between' },
@@ -195,9 +273,13 @@ const styles = {
   sectionTitle: { color: '#001f3f', borderBottom: '2px solid #fbbf24', paddingBottom: '3px', marginBottom: '12px', marginTop: '15px', fontSize: '0.9rem', fontWeight: 'bold' },
   formGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' },
   label: { fontSize: '0.65rem', fontWeight: 'bold', color: '#888', textTransform: 'uppercase', marginBottom: '4px', display: 'block' },
-  input: { width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '0.85rem' },
-  modalFooter: { padding: '15px 25px', borderTop: '1px solid #eee' },
-  btnSave: { width: '100%', padding: '12px', background: '#001f3f', color: '#fbbf24', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }
+  input: { width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '0.85rem', boxSizing: 'border-box' },
+  field: { display: 'flex', flexDirection: 'column' },
+  
+  // --- UPDATED STYLES FOR THE FOOTER AND BUTTONS ---
+  modalFooter: { padding: '15px 25px', borderTop: '1px solid #eee', display: 'flex', justifyContent: 'flex-end', gap: '12px' },
+  btnSave: { padding: '10px 20px', background: '#001f3f', color: '#fbbf24', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' },
+  btnCancel: { padding: '10px 20px', background: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }
 };
 
 export default MemberTab;

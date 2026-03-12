@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import api from '../api';
 
 // --- CONFIGURATION ARRAYS ---
@@ -8,112 +8,55 @@ const DEGREES = [
 ];
 
 const DEPARTMENTS = [
-  "Aerospace Engineering",
-  "Advanced Technology Centre",
-  "Agricultural & Food Engineering",
-  "Architecture & Regional Planning",
-  "Biotechnology",
-  "Centre for Theoretical Studies",
-  "Chemical Engineering",
-  "Chemistry",
-  "Civil Engineering",
-  "Computer Science & Engineering",
-  "Cyrogenic Engineering",
-  "Center for Educational Technology",
-  "Energy Science and Engineering",
-  "Energy Engineering",
-  "Electrical Engineering",
-  "Electronics & Electrical Communications Engineering",
-  "Exploration Geophysics",
-  "GS Sanyal School of Telecommunications (GS)",
-  "GS Sanyal School of Telecommunications (TE)",
-  "Geology & Geophysics",
-  "Humanities & Social Sciences",
-  "Industrial Engineering & Management",
-  "Instrumentation Engineering",
-  "School of Information Technology",
-  "Material Science",
-  "Mathematics",
-  "Manufacturing Engineering",
-  "Mechanical Engineering",
-  "Medical Science & Technology",
-  "Metallurgical Engineering",
-  "Mining Engineering",
-  "Ocean Engineering & Naval Architecture",
-  "Ocean, Rivers, Atmosphere & Land Sciences",
-  "Physics & Meteorology",
-  "Quality Engineering Design and Manufacturing",
-  "Rajendra Mishra School of Engineering Entrepreneurship",
-  "Rajeev Gandhi School of Intellectual Property Law",
-  "Ranbir and Chitra Gupta School of Infrastructure Design and Management",
-  "Reliability Engineering",
-  "Rubber Technology Center",
-  "Rural Development Centre",
-  "School of Water Resources",
-  "Steel Technology Centre",
-  "Statistics and Informatics",
-  "Vinod Gupta School of Management",
-  "Other"
+  "Aerospace Engineering", "Advanced Technology Centre", "Agricultural & Food Engineering",
+  "Architecture & Regional Planning", "Biotechnology", "Centre for Theoretical Studies",
+  "Chemical Engineering", "Chemistry", "Civil Engineering", "Computer Science & Engineering",
+  "Cyrogenic Engineering", "Center for Educational Technology", "Energy Science and Engineering",
+  "Energy Engineering", "Electrical Engineering", "Electronics & Electrical Communications Engineering",
+  "Exploration Geophysics", "GS Sanyal School of Telecommunications (GS)",
+  "GS Sanyal School of Telecommunications (TE)", "Geology & Geophysics", "Humanities & Social Sciences",
+  "Industrial Engineering & Management", "Instrumentation Engineering", "School of Information Technology",
+  "Material Science", "Mathematics", "Manufacturing Engineering", "Mechanical Engineering",
+  "Medical Science & Technology", "Metallurgical Engineering", "Mining Engineering",
+  "Ocean Engineering & Naval Architecture", "Ocean, Rivers, Atmosphere & Land Sciences",
+  "Physics & Meteorology", "Quality Engineering Design and Manufacturing",
+  "Rajendra Mishra School of Engineering Entrepreneurship", "Rajeev Gandhi School of Intellectual Property Law",
+  "Ranbir and Chitra Gupta School of Infrastructure Design and Management", "Reliability Engineering",
+  "Rubber Technology Center", "Rural Development Centre", "School of Water Resources",
+  "Steel Technology Centre", "Statistics and Informatics", "Vinod Gupta School of Management", "Other"
 ];
 
 const HALLS = [
-  "Ashutosh Mukherjee",
-  "Azad",
-  "Bhidan Chandra Roy",
-  "Campus",
-  "Dr. B R Ambedkar",
-  "Gokhale",
-  "Homi J Bhabha",
-  "Jagadish Chandra Bose",
-  "Lala Lajpat Rai",
-  "Lalbahadur Sastry",
-  "Madan Mohan Malaviya",
-  "Meghnad Saha",
-  "Mother Teresa",
-  "Nehru",
-  "Patel",
-  "Radhakrishnan",
-  "Rajendra Prasad",
-  "Rani Laxmi Bai",
-  "Sarojini Naidu / Indira Gandhi",
-  "Vidyasagar",
-  "Zakir Hussain",
-  "Vikram Sarabhai Residential Complex",
-  "Institute Quarter",
-  "Bachelors Flat",
-  "Rader Flats",
-  "Other"
+  "Ashutosh Mukherjee", "Azad", "Bhidan Chandra Roy", "Campus", "Dr. B R Ambedkar",
+  "Gokhale", "Homi J Bhabha", "Jagadish Chandra Bose", "Lala Lajpat Rai", "Lalbahadur Sastry",
+  "Madan Mohan Malaviya", "Meghnad Saha", "Mother Teresa", "Nehru", "Patel", "Radhakrishnan",
+  "Rajendra Prasad", "Rani Laxmi Bai", "Sarojini Naidu / Indira Gandhi", "Vidyasagar",
+  "Zakir Hussain", "Vikram Sarabhai Residential Complex", "Institute Quarter", "Bachelors Flat",
+  "Rader Flats", "Other"
 ];
 // ----------------------------
 
 const AddMember = ({ onSuccess }) => {
   const [formData, setFormData] = useState({
-    firstName: '', 
-    lastName: '', 
-    email: '', 
-    countryCode: '+91',
-    mobile: '',
-    birthdate: '',
-    sex: '',
-    maritalStatus: 'Single',
-    lifeMemberNumber: '', // Moved here
-    yearOfGraduation: '', 
-    department: '',
-    degree: '', 
-    hall: '', 
-    currentOccupation: '',
-    residenceAddress: '',
-    officeAddress: '',
-    spouseFirstName: '',
-    spouseLastName: '',
-    anniversaryDate: '',
-    spouseBirthdate: '',
-    numberOfChildren: 0,
-    referredBy: ''
+    firstName: '', lastName: '', email: '', countryCode: '+91', mobile: '',
+    birthdate: '', sex: '', maritalStatus: 'Single', lifeMemberNumber: '', 
+    yearOfGraduation: '', department: '', degree: '', hall: '', currentOccupation: '',
+    residenceAddress: '', officeAddress: '', spouseFirstName: '', spouseLastName: '',
+    anniversaryDate: '', spouseBirthdate: '', numberOfChildren: 0, referredBy: ''
   });
   
   const [profilePic, setProfilePic] = useState(null);
   const [loading, setLoading] = useState(false);
+  
+  // NEW STATE: To hold the list of members for the dropdown
+  const [existingMembers, setExistingMembers] = useState([]);
+
+  // NEW HOOK: Fetch the members when the form loads
+  useEffect(() => {
+    api.get('/api/alumni')
+      .then(res => setExistingMembers(res.data))
+      .catch(err => console.error("Could not load reference members", err));
+  }, []);
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
@@ -123,7 +66,9 @@ const AddMember = ({ onSuccess }) => {
     
     const data = new FormData();
     Object.keys(formData).forEach(key => {
-      if (formData[key] !== null && formData[key] !== undefined) {
+      // THE FIX: We added `&& formData[key] !== ''`
+      // This stops us from sending empty strings to Date/Number fields in MongoDB!
+      if (formData[key] !== null && formData[key] !== undefined && formData[key] !== '') {
         data.append(key, formData[key]);
       }
     });
@@ -135,8 +80,9 @@ const AddMember = ({ onSuccess }) => {
       setLoading(false);
       onSuccess(); 
     } catch (err) {
-      console.error(err);
-      alert("Registration failed. Please check your details and try again.");
+      // If it still fails, this will print the EXACT reason to your browser console
+      console.error("Backend Error Details:", err.response?.data || err.message);
+      alert(`Registration failed: ${err.response?.data?.message || "Please check your details"}`);
       setLoading(false);
     }
   };
@@ -188,7 +134,6 @@ const AddMember = ({ onSuccess }) => {
             <option value="Widowed">Widowed</option>
           </select>
         </div>
-        {/* LIFE MEMBER NUMBER MOVED HERE */}
         <div style={styles.inputGroup}>
           <label style={styles.label}>Life Member Number (If any)</label>
           <input name="lifeMemberNumber" onChange={handleChange} style={styles.input} placeholder="LM-XXXX" />
@@ -204,15 +149,24 @@ const AddMember = ({ onSuccess }) => {
         </div>
         <div style={styles.inputGroup}>
           <label style={styles.label}>Hall of Residence *</label>
-          <input name="hall" required onChange={handleChange} style={styles.input} />
+          <select name="hall" required onChange={handleChange} style={styles.input} value={formData.hall}>
+            <option value="">Select Hall...</option>
+            {HALLS.map(hall => <option key={hall} value={hall}>{hall}</option>)}
+          </select>
         </div>
         <div style={styles.inputGroup}>
           <label style={styles.label}>Degree *</label>
-          <input name="degree" required onChange={handleChange} style={styles.input} />
+          <select name="degree" required onChange={handleChange} style={styles.input} value={formData.degree}>
+            <option value="">Select Degree...</option>
+            {DEGREES.map(deg => <option key={deg} value={deg}>{deg}</option>)}
+          </select>
         </div>
         <div style={styles.inputGroup}>
           <label style={styles.label}>Department *</label>
-          <input name="department" required onChange={handleChange} style={styles.input} />
+          <select name="department" required onChange={handleChange} style={styles.input} value={formData.department}>
+            <option value="">Select Department...</option>
+            {DEPARTMENTS.map(dept => <option key={dept} value={dept}>{dept}</option>)}
+          </select>
         </div>
       </div>
 
@@ -258,21 +212,40 @@ const AddMember = ({ onSuccess }) => {
         </div>
       </div>
 
-      {/* MEDIA & REFERENCE */}
+      {/* SECTION 5: MEDIA & REFERENCE */}
       <h3 style={styles.sectionTitle}>5. Finalize Profile</h3>
-      <div style={styles.inputGroup}>
-        <label style={styles.label}>Profile Picture</label>
-        <input type="file" onChange={(e) => setProfilePic(e.target.files[0])} style={styles.fileInput} />
+      
+      <div style={styles.uploadBox}>
+        <label style={{...styles.label, marginBottom: '8px', display: 'block'}}>Profile Picture (Optional)</label>
+        <input 
+          type="file" 
+          accept="image/png, image/jpeg, image/jpg"
+          onChange={(e) => setProfilePic(e.target.files[0])} 
+          style={styles.fileInput} 
+        />
+        <p style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '5px', margin: 0 }}>
+          Recommended: Square image, max 5MB.
+        </p>
       </div>
 
+      {/* --- REFERRED BY DATALIST --- */}
       <div style={styles.refBox}>
         <label style={{ ...styles.label, color: '#856404' }}>Referred By (Reference Name)</label>
         <input 
+          list="reference-members-list"
           name="referredBy" 
           onChange={handleChange} 
-          style={{ ...styles.input, borderColor: '#ffeeba' }} 
-          placeholder="Name of an existing senior/member" 
+          style={{ ...styles.input, borderColor: '#ffeeba', width: '100%', boxSizing: 'border-box' }} 
+          placeholder="Start typing a member's name..." 
         />
+        <datalist id="reference-members-list">
+          {existingMembers.map(m => (
+            <option 
+              key={m._id} 
+              value={`${m.firstName} ${m.lastName} - Batch of ${m.yearOfGraduation}`} 
+            />
+          ))}
+        </datalist>
       </div>
 
       <button type="submit" disabled={loading} style={styles.submitBtn}>
@@ -288,10 +261,11 @@ const styles = {
   grid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' },
   inputGroup: { display: 'flex', flexDirection: 'column', marginBottom: '10px' },
   label: { fontSize: '0.8rem', fontWeight: 'bold', color: '#475569', marginBottom: '5px' },
-  input: { padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '0.9rem', outline: 'none' },
-  fileInput: { fontSize: '0.85rem', color: '#64748b', marginTop: '5px' },
+  input: { padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '0.9rem', outline: 'none', backgroundColor: '#fff' },
+  uploadBox: { backgroundColor: '#f8fafc', padding: '15px', borderRadius: '12px', border: '1px dashed #cbd5e1', marginBottom: '15px' },
+  fileInput: { fontSize: '0.9rem', color: '#334155', width: '100%', cursor: 'pointer' },
   refBox: { marginTop: '20px', backgroundColor: '#fff9e6', padding: '15px', borderRadius: '12px', border: '1px solid #ffeeba' },
-  submitBtn: { marginTop: '30px', width: '100%', padding: '15px', backgroundColor: '#001f3f', color: '#fbbf24', border: 'none', borderRadius: '12px', fontWeight: 'bold', fontSize: '1rem', cursor: 'pointer' }
+  submitBtn: { marginTop: '30px', width: '100%', padding: '15px', backgroundColor: '#001f3f', color: '#fbbf24', border: 'none', borderRadius: '12px', fontWeight: 'bold', fontSize: '1rem', cursor: 'pointer', transition: '0.3s' }
 };
 
 export default AddMember;

@@ -5,9 +5,9 @@ import MemberTab from './MemberTab';
 import CommitteeTab from './CommitteeTab';
 import EventTab from './EventTab';
 import DocumentTab from './DocumentTab';
+import DatabaseTab from './DatabaseTab'; // 1. Import the new tab
 
 const AdminPanel = () => {
-  // Initialize state based on existing session
   const [auth, setAuth] = useState(isAdminAuthenticated());
   const [pass, setPass] = useState('');
   const [activeTab, setActiveTab] = useState('members');
@@ -30,7 +30,6 @@ const AdminPanel = () => {
     } catch (err) { console.error("Fetch Error:", err); }
   };
 
-  // Fetch data immediately if already authenticated
   useEffect(() => {
     if (auth) fetchAll();
   }, [auth]);
@@ -38,7 +37,7 @@ const AdminPanel = () => {
   const handleLogin = (e) => {
     e.preventDefault();
     if (pass === 'Loki12345') {
-      setAdminSession(); // Save to localStorage
+      setAdminSession(); 
       setAuth(true);
     } else {
       alert('Wrong Password');
@@ -46,9 +45,9 @@ const AdminPanel = () => {
   };
 
   const handleLogout = () => {
-    logoutAdmin(); // Clear localStorage
+    logoutAdmin(); 
     setAuth(false);
-    window.location.reload(); // Hard reset to clear state
+    window.location.reload(); 
   };
 
   if (!auth) return (
@@ -69,6 +68,15 @@ const AdminPanel = () => {
         <div style={activeTab === 'committee' ? styles.sidebarActive : styles.sidebarItem} onClick={() => setActiveTab('committee')}>🏛️ Committee</div>
         <div style={activeTab === 'events' ? styles.sidebarActive : styles.sidebarItem} onClick={() => setActiveTab('events')}>📅 Events</div>
         <div style={activeTab === 'docs' ? styles.sidebarActive : styles.sidebarItem} onClick={() => setActiveTab('docs')}>📄 Documents</div>
+        
+        {/* 2. Added Database Sidebar Item */}
+        <div 
+          style={activeTab === 'database' ? styles.sidebarActive : styles.sidebarItem} 
+          onClick={() => setActiveTab('database')}
+        >
+          ⚙️ Database
+        </div>
+
         <div onClick={handleLogout} style={styles.logoutBtn}>Sign Out</div>
       </aside>
 
@@ -77,12 +85,14 @@ const AdminPanel = () => {
         {activeTab === 'committee' && <CommitteeTab committee={data.committee} members={data.members} refresh={fetchAll} />}
         {activeTab === 'events' && <EventTab events={data.events} refresh={fetchAll} />}
         {activeTab === 'docs' && <DocumentTab docs={data.docs} refresh={fetchAll} />}
+        
+        {/* 3. Render Database Tab */}
+        {activeTab === 'database' && <DatabaseTab refresh={fetchAll} />}
       </main>
     </div>
   );
 };
 
-// ... (Styles stay the same as previous version)
 const styles = {
   sidebar: { width: '240px', backgroundColor: '#001f3f', color: 'white', padding: '30px 20px', position: 'fixed', height: '100vh' },
   sidebarItem: { padding: '15px', cursor: 'pointer', borderRadius: '10px', marginBottom: '5px', transition: '0.3s' },

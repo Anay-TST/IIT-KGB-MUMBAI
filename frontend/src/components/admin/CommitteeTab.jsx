@@ -2,14 +2,13 @@ import React, { useState } from 'react';
 import api from '../../api';
 
 const CommitteeTab = ({ committee, members, refresh }) => {
-  // We only need two simple states now!
   const [searchTerm, setSearchTerm] = useState('');
   const [title, setTitle] = useState('');
 
   const handleAdd = async (e) => {
     e.preventDefault();
     
-    // 1. We find the actual member ID based on the exact name/batch they clicked
+    // Find the actual member ID based on the exact name/batch they clicked
     const selectedMember = members.find(
       m => `${m.firstName} ${m.lastName} - Batch of ${m.yearOfGraduation}` === searchTerm
     );
@@ -18,10 +17,10 @@ const CommitteeTab = ({ committee, members, refresh }) => {
       return alert("Please select a valid member from the dropdown suggestions and enter a role.");
     }
 
-    // 2. Send the correct _id to your backend
+    // Send the correct _id to your backend
     await api.post('/api/committee', { memberId: selectedMember._id, title, order: committee.length });
     
-    // 3. Clear the form
+    // Clear the form
     setTitle(''); 
     setSearchTerm(''); 
     refresh();
@@ -47,15 +46,15 @@ const CommitteeTab = ({ committee, members, refresh }) => {
         <div style={{ flex: 1 }}>
           <input 
             list="approved-members-list" 
-            placeholder="Type 3-4 letters to search..." 
+            placeholder="Search Life Members (type 3-4 letters)..." 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             style={{ ...styles.input, width: '100%', boxSizing: 'border-box' }}
           />
           
-          {/* The browser handles this list automatically! */}
+          {/* THE FIX: Added && m.isLifeMember to the filter below! */}
           <datalist id="approved-members-list">
-            {members.filter(m => m.isApproved).map(m => (
+            {members.filter(m => m.isApproved && m.isLifeMember).map(m => (
               <option 
                 key={m._id} 
                 value={`${m.firstName} ${m.lastName} - Batch of ${m.yearOfGraduation}`} 
