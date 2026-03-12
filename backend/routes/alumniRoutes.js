@@ -120,7 +120,7 @@ router.put('/:id', upload.single('profilePic'), async (req, res) => {
   }
 });
 
-// PATCH: Status Toggle & EMAIL AUTOMATION (WITH AGGRESSIVE LOGGING)
+// PATCH: Status Toggle & EMAIL AUTOMATION
 router.patch('/status/:id', async (req, res) => {
   console.log(`\n--- 🚦 INCOMING REQUEST: Toggle Status ---`);
   console.log(`Action requested: ${req.query.action} for member ID: ${req.params.id}`);
@@ -149,30 +149,43 @@ router.patch('/status/:id', async (req, res) => {
         member.password = await bcrypt.hash(tempPassword, salt);
         console.log("✅ Password hashed successfully.");
 
-        // 3. Email Prep
+        // 3. Setup the Email (UPDATED WITH YOUR EXACT TEMPLATE)
         const mailOptions = {
-          from: `"IIT KGB Mumbai Alumni" <${process.env.EMAIL_USER}>`,
+          // Fixed the KGB typo here!
+          from: `"IIT KGP Mumbai Alumni" <${process.env.EMAIL_USER}>`,
           to: member.email,
-          subject: 'Welcome! Your Alumni Account is Approved',
+          subject: 'Welcome to IIT KGP Mumbai Alumni Association!',
           html: `
             <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
-              <h2 style="color: #001f3f;">Welcome, ${member.firstName}!</h2>
-              <p>Your membership to the IIT KGB Mumbai Alumni Network has been officially approved.</p>
+              <h2 style="color: #003366; margin-top: 0;">Welcome, ${member.firstName}!</h2>
+              
+              <p>Your membership to the <strong>IIT KGP Mumbai Alumni Association</strong> has been officially approved.</p>
               <p>You can now log in to the portal to update your profile, connect with the community, and stay updated on events.</p>
               
-              <div style="background-color: #f4f7f6; padding: 20px; border-left: 4px solid #fbbf24; margin: 20px 0; border-radius: 4px;">
-                <p style="margin: 0 0 10px 0;"><strong>Your Login Credentials:</strong></p>
-                <p style="margin: 0 0 5px 0;">Email: <strong>${member.email}</strong></p>
-                <p style="margin: 0;">Temporary Password: <strong>${tempPassword}</strong></p>
+              <div style="background-color: #f4f7f6; padding: 20px; border-left: 4px solid #fbbf24; margin: 25px 0; border-radius: 4px;">
+                <p style="margin: 0 0 15px 0; font-size: 1.1em;"><strong>Your Login Credentials:</strong></p>
+                
+                <p style="margin: 0 0 8px 0;">Email: <strong>${member.email}</strong></p>
+                <p style="margin: 0 0 15px 0;">Temporary Password: <strong>${tempPassword}</strong></p>
+                
+                <p style="margin: 0;">
+                  Login link: <br/>
+                  <a href="${process.env.FRONTEND_URL}/login" style="color: #003366; font-weight: bold; word-break: break-all;">
+                    ${process.env.FRONTEND_URL}/login
+                  </a>
+                </p>
               </div>
               
               <p><em>For security reasons, please log in and change this temporary password immediately.</em></p>
-              <p>Best Regards,<br/><strong>IIT KGB Mumbai Alumni Association</strong></p>
+              
+              <br/>
+              <p style="margin: 0;">Best Regards,</p>
+              <p style="margin: 5px 0 0 0; font-weight: bold; color: #003366;">IIT KGP Mumbai Alumni Association</p>
             </div>
           `
         };
 
-        // 4. Send Email
+        // 4. Send the Email
         console.log("⏳ Attempting to send email to:", member.email);
         transporter.sendMail(mailOptions, (error, info) => {
           if (error) {

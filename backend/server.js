@@ -14,6 +14,7 @@ const app = express();
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
+
 // Enable CORS for frontend communication
 app.use(cors());
 
@@ -27,6 +28,7 @@ app.use('/api/events', require('./routes/eventRoutes'));
 app.use('/api/documents', require('./routes/documentRoutes'));
 app.use('/api/committee', require('./routes/committeeRoutes'));
 app.use('/api/articles', require('./routes/articleRoutes'));
+app.use('/api/auth', require('./routes/authRoutes'));
 
 
 // --- DATABASE CONNECTION ---

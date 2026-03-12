@@ -8,6 +8,7 @@ import MembersPage from "./components/MembersPage";
 import CommitteePage from "./components/CommitteePage";
 import EventsPage from "./components/EventsPage";
 import DocumentsPage from "./components/DocumentsPage";
+import MemberLogin from './components/MemberLogin';
 
 // Admin Components
 import AdminPanel from './components/admin/AdminPanel';
@@ -29,6 +30,7 @@ function App() {
           <Route path="/committee" element={<CommitteePage />} />
           <Route path="/events" element={<EventsPage />} />
           <Route path="/documents" element={<DocumentsPage />} />
+          <Route path="/login" element={<MemberLogin />} />
 
           {/* Admin Route */}
           <Route path="/admin/*" element={<AdminPanel />} />
