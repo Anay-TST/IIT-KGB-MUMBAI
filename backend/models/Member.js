@@ -32,6 +32,7 @@ const memberSchema = new mongoose.Schema({
   // Section 4: Spouse & Family
   spouseFirstName: { type: String },
   spouseLastName: { type: String },
+  spouseBirthdate: { type: Date }, // <-- NEW: Added missing field here!
   anniversaryDate: { type: Date },
   numberOfChildren: { type: Number, default: 0 },
   

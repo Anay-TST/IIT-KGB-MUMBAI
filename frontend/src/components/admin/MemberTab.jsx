@@ -203,9 +203,23 @@ const MemberTab = ({ members, refresh }) => {
                 <div style={styles.field}><label style={styles.label}>First Name</label><input value={editData.firstName || ''} onChange={e => setEditData({...editData, firstName: e.target.value})} style={styles.input} /></div>
                 <div style={styles.field}><label style={styles.label}>Last Name</label><input value={editData.lastName || ''} onChange={e => setEditData({...editData, lastName: e.target.value})} style={styles.input} /></div>
                 <div style={styles.field}><label style={styles.label}>Email</label><input value={editData.email || ''} onChange={e => setEditData({...editData, email: e.target.value})} style={styles.input} /></div>
-                <div style={styles.field}><label style={styles.label}>Country Code</label><input value={editData.countryCode || ''} onChange={e => setEditData({...editData, countryCode: e.target.value})} style={styles.input} /></div>
-                <div style={styles.field}><label style={styles.label}>Mobile</label><input value={editData.mobile || ''} onChange={e => setEditData({...editData, mobile: e.target.value})} style={styles.input} /></div>
+                <div style={{display: 'flex', gap: '10px'}}>
+                  <div style={{...styles.field, width: '70px'}}><label style={styles.label}>Code</label><input value={editData.countryCode || ''} onChange={e => setEditData({...editData, countryCode: e.target.value})} style={styles.input} /></div>
+                  <div style={{...styles.field, flex: 1}}><label style={styles.label}>Mobile</label><input value={editData.mobile || ''} onChange={e => setEditData({...editData, mobile: e.target.value})} style={styles.input} /></div>
+                </div>
                 <div style={styles.field}><label style={styles.label}>DOB</label><input type="date" value={formatDateForInput(editData.birthdate)} onChange={e => setEditData({...editData, birthdate: e.target.value})} style={styles.input} /></div>
+                <div style={styles.field}>
+                  <label style={styles.label}>Sex</label>
+                  <select value={editData.sex || ''} onChange={e => setEditData({...editData, sex: e.target.value})} style={styles.input}>
+                    <option value="">Select...</option><option value="Male">Male</option><option value="Female">Female</option><option value="Other">Other</option>
+                  </select>
+                </div>
+                <div style={styles.field}>
+                  <label style={styles.label}>Marital Status</label>
+                  <select value={editData.maritalStatus || ''} onChange={e => setEditData({...editData, maritalStatus: e.target.value})} style={styles.input}>
+                    <option value="Single">Single</option><option value="Married">Married</option><option value="Divorced">Divorced</option><option value="Widowed">Widowed</option>
+                  </select>
+                </div>
                 <div style={styles.field}><label style={styles.label}>Life Member No.</label><input value={editData.lifeMemberNumber || ''} onChange={e => setEditData({...editData, lifeMemberNumber: e.target.value})} style={styles.input} /></div>
               </div>
 
@@ -218,28 +232,29 @@ const MemberTab = ({ members, refresh }) => {
               </div>
 
               <h4 style={styles.sectionTitle}>3. Professional & Address</h4>
-              <div style={styles.field}><label style={styles.label}>Occupation</label><input value={editData.currentOccupation || ''} onChange={e => setEditData({...editData, currentOccupation: e.target.value})} style={styles.input} /></div>
               <div style={styles.formGrid}>
+                <div style={styles.field}><label style={styles.label}>Occupation</label><input value={editData.currentOccupation || ''} onChange={e => setEditData({...editData, currentOccupation: e.target.value})} style={styles.input} /></div>
+                <div style={styles.field}><label style={styles.label}>Referred By</label><input value={editData.referredBy || ''} onChange={e => setEditData({...editData, referredBy: e.target.value})} style={styles.input} /></div>
                 <div style={styles.field}><label style={styles.label}>Residence</label><textarea value={editData.residenceAddress || ''} onChange={e => setEditData({...editData, residenceAddress: e.target.value})} style={{...styles.input, height:'50px'}} /></div>
                 <div style={styles.field}><label style={styles.label}>Office</label><textarea value={editData.officeAddress || ''} onChange={e => setEditData({...editData, officeAddress: e.target.value})} style={{...styles.input, height:'50px'}} /></div>
               </div>
 
               <h4 style={styles.sectionTitle}>4. Family Details</h4>
               <div style={styles.formGrid}>
-                <div style={styles.field}><label style={styles.label}>Spouse Name</label><input value={editData.spouseFirstName || ''} onChange={e => setEditData({...editData, spouseFirstName: e.target.value})} style={styles.input} /></div>
+                <div style={styles.field}><label style={styles.label}>Spouse First Name</label><input value={editData.spouseFirstName || ''} onChange={e => setEditData({...editData, spouseFirstName: e.target.value})} style={styles.input} /></div>
+                <div style={styles.field}><label style={styles.label}>Spouse Last Name</label><input value={editData.spouseLastName || ''} onChange={e => setEditData({...editData, spouseLastName: e.target.value})} style={styles.input} /></div>
+                <div style={styles.field}><label style={styles.label}>Spouse Birthdate</label><input type="date" value={formatDateForInput(editData.spouseBirthdate)} onChange={e => setEditData({...editData, spouseBirthdate: e.target.value})} style={styles.input} /></div>
                 <div style={styles.field}><label style={styles.label}>Anniversary</label><input type="date" value={formatDateForInput(editData.anniversaryDate)} onChange={e => setEditData({...editData, anniversaryDate: e.target.value})} style={styles.input} /></div>
                 <div style={styles.field}><label style={styles.label}>Children</label><input type="number" value={editData.numberOfChildren || 0} onChange={e => setEditData({...editData, numberOfChildren: e.target.value})} style={styles.input} /></div>
               </div>
             </div>
             
-            {/* --- NEW: UPDATED MODAL FOOTER WITH CANCEL BUTTON --- */}
             <div style={styles.modalFooter}>
                 <button onClick={closeModal} style={styles.btnCancel}>Discard Changes</button>
                 <button onClick={saveEdit} disabled={loading} style={styles.btnSave}>
                   {loading ? 'Saving...' : 'Save Member Data'}
                 </button>
             </div>
-            {/* ---------------------------------------------------- */}
 
           </div>
         </div>
@@ -276,8 +291,6 @@ const styles = {
   label: { fontSize: '0.65rem', fontWeight: 'bold', color: '#888', textTransform: 'uppercase', marginBottom: '4px', display: 'block' },
   input: { width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '0.85rem', boxSizing: 'border-box' },
   field: { display: 'flex', flexDirection: 'column' },
-  
-  // --- UPDATED STYLES FOR THE FOOTER AND BUTTONS ---
   modalFooter: { padding: '15px 25px', borderTop: '1px solid #eee', display: 'flex', justifyContent: 'flex-end', gap: '12px' },
   btnSave: { padding: '10px 20px', background: '#001f3f', color: '#fbbf24', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' },
   btnCancel: { padding: '10px 20px', background: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }
