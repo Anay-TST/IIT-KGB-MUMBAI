@@ -47,6 +47,11 @@ const MemberTab = ({ members, refresh }) => {
     }
   };
 
+  const handleCloseModal = () => {
+    setEditData(null);
+    setNewProfilePic(null);
+  };
+
   const saveEdit = async () => {
     setLoading(true);
     try {
@@ -60,8 +65,7 @@ const MemberTab = ({ members, refresh }) => {
       if (newProfilePic) formData.append('profilePic', newProfilePic);
 
       await api.put(`/api/alumni/${editData._id}`, formData);
-      setEditData(null);
-      setNewProfilePic(null);
+      handleCloseModal();
       await refresh();
       alert("Updated successfully");
     } catch (err) { alert("Update failed"); }
@@ -120,7 +124,10 @@ const MemberTab = ({ members, refresh }) => {
       {editData && (
         <div style={styles.overlay}>
           <div style={styles.modal}>
-            <div style={styles.modalHeader}><h3>Full Profile Edit: {editData.firstName}</h3><button onClick={() => setEditData(null)} style={styles.closeX}>&times;</button></div>
+            <div style={styles.modalHeader}>
+              <h3 style={{margin:0}}>Full Profile Edit: {editData.firstName}</h3>
+              <button onClick={handleCloseModal} style={styles.closeX}>&times;</button>
+            </div>
             <div style={styles.modalBody}>
               
               <h4 style={styles.sectionTitle}>1. Identity & Contact</h4>
@@ -129,7 +136,6 @@ const MemberTab = ({ members, refresh }) => {
                 <div style={styles.field}><label style={styles.label}>Last Name</label><input value={editData.lastName || ''} onChange={e => setEditData({...editData, lastName: e.target.value})} style={styles.input} /></div>
                 <div style={styles.field}><label style={styles.label}>Email</label><input value={editData.email || ''} onChange={e => setEditData({...editData, email: e.target.value})} style={styles.input} /></div>
                 
-                {/* FIXED CSS FOR COUNTRY CODE & MOBILE */}
                 <div style={styles.field}>
                    <label style={styles.label}>Mobile (Code + Number)</label>
                    <div style={{display:'flex', gap:'8px'}}>
@@ -185,13 +191,46 @@ const MemberTab = ({ members, refresh }) => {
                    <input type="checkbox" style={{width:'18px', height:'18px'}} checked={editData.isLifeMember || false} onChange={e => setEditData({...editData, isLifeMember: e.target.checked})} />
                    <label style={{fontWeight:'bold', fontSize:'0.85rem'}}>Life Member</label>
                 </div>
-                <div style={{gridColumn:'span 2', background:'#f1f5f9', padding:'10px', borderRadius:'8px'}}>
-                   <label style={styles.label}>Update Profile Photo</label>
-                   <input type="file" accept="image/*" onChange={e => setNewProfilePic(e.target.files[0])} />
+                
+                {/* UPGRADED IMAGE UPLOAD UI */}
+                <div style={{gridColumn:'span 2', background:'#f8fafc', padding:'15px', borderRadius:'12px', border:'1px solid #e2e8f0'}}>
+                  <label style={styles.label}>Update Profile Photo</label>
+                  <div style={{display:'flex', alignItems:'center', gap:'20px', marginTop:'10px'}}>
+                     {newProfilePic ? (
+                       <img src={URL.createObjectURL(newProfilePic)} alt="New Selection" style={{width:'60px', height:'60px', borderRadius:'50%', objectFit:'cover', border:'2px solid #cbd5e1'}} />
+                     ) : editData.profilePic ? (
+                       <img src={`${BACKEND_URL}${editData.profilePic}`} alt="Current" style={{width:'60px', height:'60px', borderRadius:'50%', objectFit:'cover', border:'2px solid #cbd5e1'}} />
+                     ) : (
+                       <div style={{width:'60px', height:'60px', borderRadius:'50%', backgroundColor:'#e2e8f0', display:'flex', alignItems:'center', justifyContent:'center', color:'#94a3b8', fontSize:'0.7rem', textAlign:'center', border:'2px dashed #cbd5e1'}}>No Photo</div>
+                     )}
+
+                     <div style={{display:'flex', flexDirection:'column', gap:'5px'}}>
+                       <label style={{
+                          padding: '8px 16px', background: '#fff', border: '1px solid #cbd5e1', 
+                          borderRadius: '8px', color: '#001f3f', fontWeight: 'bold', fontSize: '0.85rem', 
+                          cursor: 'pointer', textAlign: 'center', display: 'inline-block', boxShadow:'0 1px 2px rgba(0,0,0,0.05)'
+                       }}>
+                          {editData.profilePic || newProfilePic ? 'Choose New File' : 'Select Profile Picture'}
+                          <input 
+                            type="file" 
+                            accept="image/*" 
+                            onChange={e => setNewProfilePic(e.target.files[0])} 
+                            style={{ display: 'none' }}
+                          />
+                       </label>
+                       <span style={{fontSize:'0.75rem', color:'#64748b'}}>
+                          {newProfilePic ? newProfilePic.name : (editData.profilePic ? 'Current photo saved' : 'No new file chosen')}
+                       </span>
+                     </div>
+                  </div>
                 </div>
+
               </div>
             </div>
-            <div style={styles.modalFooter}><button onClick={() => setEditData(null)} style={styles.btnCancel}>Discard</button><button onClick={saveEdit} disabled={loading} style={styles.btnSave}>{loading ? 'Saving...' : 'Save All Changes'}</button></div>
+            <div style={styles.modalFooter}>
+              <button onClick={handleCloseModal} style={styles.btnCancel}>Discard</button>
+              <button onClick={saveEdit} disabled={loading} style={styles.btnSave}>{loading ? 'Saving...' : 'Save All Changes'}</button>
+            </div>
           </div>
         </div>
       )}

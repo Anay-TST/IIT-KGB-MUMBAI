@@ -7,6 +7,9 @@ const path = require('path');
 const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
 
+// 🌟 ADDED: Import the protect middleware to secure the profile routes
+const { protect } = require('../middleware/authMiddleware');
+
 // --- EMAIL TRANSPORTER SETUP ---
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -93,7 +96,56 @@ router.get('/all', async (req, res) => {
   }
 });
 
-// PUT: Full Edit
+// ======================================================
+// 🌟 NEW: PROFILE ROUTES (MUST BE ABOVE THE /:id ROUTE)
+// ======================================================
+
+// GET: Fetch the logged-in user's own profile
+router.get('/profile', protect, async (req, res) => {
+  try {
+    const member = await Member.findById(req.user.id);
+    if (!member) return res.status(404).json({ message: "Profile not found" });
+    res.json(member);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// PUT: Update the logged-in user's own profile
+router.put('/profile', protect, upload.single('profilePic'), async (req, res) => {
+  try {
+    const updateData = { ...req.body };
+    
+    // Clean up empty strings
+    for (let key in updateData) {
+      if (updateData[key] === '' || updateData[key] === 'null') {
+        delete updateData[key];
+      }
+    }
+
+    if (req.file) {
+      updateData.profilePic = `/uploads/${req.file.filename}`;
+    }
+
+    const updated = await Member.findByIdAndUpdate(
+      req.user.id, 
+      updateData, 
+      { new: true, runValidators: true }
+    );
+
+    if (!updated) return res.status(404).json({ message: "Profile not found" });
+    res.json(updated);
+  } catch (err) {
+    console.error("Profile Update Error:", err.message);
+    res.status(400).json({ message: err.message });
+  }
+});
+
+// ======================================================
+// ⚠️ DYNAMIC ROUTES (MUST BE AT THE BOTTOM)
+// ======================================================
+
+// PUT: Full Edit (Admin editing any member by ID)
 router.put('/:id', upload.single('profilePic'), async (req, res) => {
   try {
     const updateData = { ...req.body };
@@ -140,18 +192,14 @@ router.patch('/status/:id', async (req, res) => {
         console.log("✅ Member is pending. Starting approval process...");
         member.isApproved = true;
 
-        // 1. Password
         const tempPassword = Math.random().toString(36).slice(-8);
         console.log("✅ Generated temporary password.");
         
-        // 2. Hash
         const salt = await bcrypt.genSalt(10);
         member.password = await bcrypt.hash(tempPassword, salt);
         console.log("✅ Password hashed successfully.");
 
-        // 3. Setup the Email (UPDATED WITH YOUR EXACT TEMPLATE)
         const mailOptions = {
-          // Fixed the KGB typo here!
           from: `"IIT KGP Mumbai Alumni" <${process.env.EMAIL_USER}>`,
           to: member.email,
           subject: 'Welcome to IIT KGP Mumbai Alumni Association!',
@@ -185,7 +233,6 @@ router.patch('/status/:id', async (req, res) => {
           `
         };
 
-        // 4. Send the Email
         console.log("⏳ Attempting to send email to:", member.email);
         transporter.sendMail(mailOptions, (error, info) => {
           if (error) {

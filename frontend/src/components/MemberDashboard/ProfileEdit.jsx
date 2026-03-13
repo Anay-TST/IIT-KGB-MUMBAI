@@ -199,13 +199,37 @@ const ProfileEdit = () => {
           </div>
         </div>
 
-        {/* SECTION 5: PROFILE PICTURE */}
+        {/* SECTION 5: PROFILE PICTURE (UPDATED) */}
         <div style={s.section}>5. Profile Picture</div>
         <div style={{display:'flex', alignItems:'center', gap:'20px', marginTop:'10px'}}>
-           {formData.profilePic && !image && (
-             <img src={`${BACKEND_URL}${formData.profilePic}`} alt="Current" style={{width:'60px', height:'60px', borderRadius:'50%', objectFit:'cover'}} />
-           )}
-           <input type="file" accept="image/*" onChange={e => setImage(e.target.files[0])} />
+           
+           {/* IMAGE PREVIEW LOGIC */}
+           {image ? (
+             <img src={URL.createObjectURL(image)} alt="New Selection" style={{width:'70px', height:'70px', borderRadius:'50%', objectFit:'cover', border:'2px solid #cbd5e1'}} />
+           ) : formData.profilePic ? (
+             <img src={`${BACKEND_URL}${formData.profilePic}`} alt="Current" style={{width:'70px', height:'70px', borderRadius:'50%', objectFit:'cover', border:'2px solid #cbd5e1'}} />
+           ) : null}
+
+           {/* CUSTOM FILE INPUT BUTTON */}
+           <div style={{display:'flex', flexDirection:'column', gap:'5px'}}>
+             <label style={{
+                padding: '8px 16px', background: '#f8fafc', border: '1px solid #cbd5e1', 
+                borderRadius: '8px', color: '#001f3f', fontWeight: 'bold', fontSize: '0.85rem', 
+                cursor: 'pointer', textAlign: 'center', display: 'inline-block'
+             }}>
+                {formData.profilePic || image ? 'Choose New File' : 'Select Profile Picture'}
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  onChange={e => setImage(e.target.files[0])} 
+                  style={{ display: 'none' }} // Hides the ugly default input
+                />
+             </label>
+             <span style={{fontSize:'0.75rem', color:'#64748b'}}>
+                {image ? image.name : (formData.profilePic ? 'Current photo saved' : 'No new file chosen')}
+             </span>
+           </div>
+
         </div>
 
         {/* ACTIONS */}
