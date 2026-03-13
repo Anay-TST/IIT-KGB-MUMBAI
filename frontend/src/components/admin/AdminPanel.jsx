@@ -5,7 +5,8 @@ import MemberTab from './MemberTab';
 import CommitteeTab from './CommitteeTab';
 import EventTab from './EventTab';
 import DocumentTab from './DocumentTab';
-import DatabaseTab from './DatabaseTab'; // 1. Import the new tab
+import DatabaseTab from './DatabaseTab';
+import SettingsTab from './SettingsTab'; // 🌟 NEW IMPORT
 
 const AdminPanel = () => {
   const [auth, setAuth] = useState(isAdminAuthenticated());
@@ -15,19 +16,24 @@ const AdminPanel = () => {
 
   const fetchAll = async () => {
     try {
+      // SAFETY FIX: Added .catch() to each request. 
+      // If a backend route is temporarily disabled, it just returns an empty array instead of crashing the page.
       const [memRes, commRes, docRes, eventRes] = await Promise.all([
-        api.get('/api/alumni/all'),
-        api.get('/api/committee'),
-        api.get('/api/documents'),
-        api.get('/api/events')
+        api.get('/api/alumni/all').catch(() => ({ data: [] })),
+        api.get('/api/committee').catch(() => ({ data: [] })),
+        api.get('/api/documents').catch(() => ({ data: [] })),
+        api.get('/api/events').catch(() => ({ data: [] }))
       ]);
+      
       setData({
-        members: memRes.data,
-        committee: commRes.data.sort((a, b) => (a.order || 0) - (b.order || 0)),
-        docs: docRes.data,
-        events: eventRes.data
+        members: memRes.data || [],
+        committee: (commRes.data || []).sort((a, b) => (a.order || 0) - (b.order || 0)),
+        docs: docRes.data || [],
+        events: eventRes.data || []
       });
-    } catch (err) { console.error("Fetch Error:", err); }
+    } catch (err) { 
+      console.error("Fetch Error:", err); 
+    }
   };
 
   useEffect(() => {
@@ -64,18 +70,15 @@ const AdminPanel = () => {
     <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f4f7f6' }}>
       <aside style={styles.sidebar}>
         <h3 style={{color: '#fbbf24', marginBottom: '30px'}}>KGP Admin</h3>
+        
         <div style={activeTab === 'members' ? styles.sidebarActive : styles.sidebarItem} onClick={() => setActiveTab('members')}>👥 Members</div>
         <div style={activeTab === 'committee' ? styles.sidebarActive : styles.sidebarItem} onClick={() => setActiveTab('committee')}>🏛️ Committee</div>
         <div style={activeTab === 'events' ? styles.sidebarActive : styles.sidebarItem} onClick={() => setActiveTab('events')}>📅 Events</div>
         <div style={activeTab === 'docs' ? styles.sidebarActive : styles.sidebarItem} onClick={() => setActiveTab('docs')}>📄 Documents</div>
+        <div style={activeTab === 'database' ? styles.sidebarActive : styles.sidebarItem} onClick={() => setActiveTab('database')}>💾 Database</div>
         
-        {/* 2. Added Database Sidebar Item */}
-        <div 
-          style={activeTab === 'database' ? styles.sidebarActive : styles.sidebarItem} 
-          onClick={() => setActiveTab('database')}
-        >
-          ⚙️ Database
-        </div>
+        {/* 🌟 NEW: Settings Sidebar Item */}
+        <div style={activeTab === 'settings' ? styles.sidebarActive : styles.sidebarItem} onClick={() => setActiveTab('settings')}>⚙️ Settings</div>
 
         <div onClick={handleLogout} style={styles.logoutBtn}>Sign Out</div>
       </aside>
@@ -85,9 +88,10 @@ const AdminPanel = () => {
         {activeTab === 'committee' && <CommitteeTab committee={data.committee} members={data.members} refresh={fetchAll} />}
         {activeTab === 'events' && <EventTab events={data.events} refresh={fetchAll} />}
         {activeTab === 'docs' && <DocumentTab docs={data.docs} refresh={fetchAll} />}
-        
-        {/* 3. Render Database Tab */}
         {activeTab === 'database' && <DatabaseTab refresh={fetchAll} />}
+        
+        {/* 🌟 NEW: Render Settings Tab */}
+        {activeTab === 'settings' && <SettingsTab />}
       </main>
     </div>
   );

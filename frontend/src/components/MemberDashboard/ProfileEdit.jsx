@@ -1,169 +1,218 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import api, { BACKEND_URL } from '../../api';
 
-const DEGREES = ["B.Tech", "B.Arch", "Dual Degree", "M.Tech", "M.Sc", "MBA", "Ph.D", "MS", "MCP", "MMST", "LLB", "LLM", "Other"];
-const DEPARTMENTS = ["Aerospace Engineering", "Agricultural & Food Engineering", "Architecture & Regional Planning", "Biotechnology", "Chemical Engineering", "Chemistry", "Civil Engineering", "Computer Science & Engineering", "Electrical Engineering", "Electronics & Electrical Communications Engineering", "Geology & Geophysics", "Humanities & Social Sciences", "Industrial Engineering & Management", "Mathematics", "Mechanical Engineering", "Metallurgical Engineering", "Mining Engineering", "Ocean Engineering & Naval Architecture", "Physics & Meteorology", "Vinod Gupta School of Management", "Other"];
-const HALLS = ["Ashutosh Mukherjee", "Azad", "Bhidan Chandra Roy", "Campus", "Dr. B R Ambedkar", "Gokhale", "Homi J Bhabha", "Jagadish Chandra Bose", "Lala Lajpat Rai", "Lalbahadur Sastry", "Madan Mohan Malaviya", "Meghnad Saha", "Mother Teresa", "Nehru", "Patel", "Radhakrishnan", "Rajendra Prasad", "Rani Laxmi Bai", "Sarojini Naidu / Indira Gandhi", "Vidyasagar", "Zakir Hussain", "Other"];
+const ProfileEdit = () => {
+  const [formData, setFormData] = useState({
+    firstName: '', lastName: '', email: '', countryCode: '', mobile: '', birthdate: '',
+    sex: '', maritalStatus: '', degree: '', department: '', hall: '', yearOfGraduation: '',
+    currentOccupation: '', residenceAddress: '', officeAddress: '', spouseFirstName: '',
+    spouseLastName: '', spouseBirthdate: '', anniversaryDate: '', numberOfChildren: 0,
+    referredBy: '', lifeMemberNumber: '', isLifeMember: false
+  });
 
-const ProfileEdit = ({ userData, refreshData }) => {
-  const [formData, setFormData] = useState({ ...userData });
-  const [newProfilePic, setNewProfilePic] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState({ type: '', text: '' });
+  const [originalData, setOriginalData] = useState(null);
+  const [options, setOptions] = useState({ 
+    degrees: [], departments: [], halls: [], maritalStatuses: [], genders: ['Male', 'Female', 'Other'] 
+  });
+  
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [image, setImage] = useState(null);
 
-  const handleSave = async (e) => {
-    e.preventDefault();
+  useEffect(() => {
+    loadProfile();
+  }, []);
+
+  const loadProfile = async () => {
     setLoading(true);
-    setMessage({ type: '', text: '' });
-
     try {
-      // Security: Strip out Admin-controlled fields before sending to the database
-      const { lifeMemberNumber, isLifeMember, isApproved, _id, __v, createdAt, updatedAt, ...allowedData } = formData;
-
-      if (newProfilePic) {
-        const data = new FormData();
-        Object.keys(allowedData).forEach(key => {
-          if (allowedData[key] !== null && allowedData[key] !== undefined && allowedData[key] !== '') {
-            data.append(key, String(allowedData[key])); 
-          }
-        });
-        data.append('profilePic', newProfilePic);
-        
-        await fetch(`${BACKEND_URL}/api/alumni/${userData._id}`, {
-          method: 'PUT',
-          headers: { 'Authorization': `Bearer ${localStorage.getItem('memberToken')}` },
-          body: data,
-        });
-      } else {
-        await api.put(`/api/alumni/${userData._id}`, allowedData);
+      const [configRes, profileRes] = await Promise.all([
+        api.get('/api/config'),
+        api.get('/api/alumni/profile')
+      ]);
+      
+      setOptions({
+        degrees: configRes.data.degrees || [],
+        departments: configRes.data.departments || [],
+        halls: configRes.data.halls || [],
+        maritalStatuses: configRes.data.maritalStatuses || [],
+        genders: configRes.data.genders || ['Male', 'Female', 'Other']
+      });
+      
+      if (profileRes.data) {
+        setFormData(profileRes.data);
+        setOriginalData(profileRes.data);
       }
-
-      setMessage({ type: 'success', text: 'Profile updated successfully!' });
-      refreshData(); 
-      window.scrollTo(0, 0);
     } catch (err) {
-      setMessage({ type: 'error', text: 'Failed to update profile.' });
+      console.error("Error loading profile:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleDiscard = () => {
+    if (window.confirm("Discard all unsaved changes?")) {
+      setFormData(originalData);
+      setImage(null);
+    }
+  };
+
+  const formatDate = (d) => (d ? d.split('T')[0] : '');
+  
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData({ ...formData, [name]: type === 'checkbox' ? checked : value });
+  };
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const data = new FormData();
+      const fields = [
+        'firstName', 'lastName', 'email', 'countryCode', 'mobile', 'birthdate', 'sex', 
+        'maritalStatus', 'yearOfGraduation', 'degree', 'department', 'hall', 
+        'currentOccupation', 'residenceAddress', 'officeAddress', 'spouseFirstName', 
+        'spouseLastName', 'spouseBirthdate', 'anniversaryDate', 'numberOfChildren', 
+        'referredBy', 'lifeMemberNumber', 'isLifeMember'
+      ];
+      
+      fields.forEach(key => {
+        if (formData[key] !== undefined && formData[key] !== null) {
+          data.append(key, formData[key]);
+        }
+      });
+
+      if (image) data.append('profilePic', image);
+      
+      await api.put('/api/alumni/profile', data);
+      setOriginalData(formData);
+      alert("Profile updated successfully!");
+    } catch (err) {
+      alert(err.response?.data?.message || "Error saving profile");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) return <div style={{padding:'50px', textAlign:'center', color:'#001f3f'}}>Loading your profile...</div>;
 
   return (
-    <div style={styles.card}>
-      <h3 style={styles.title}>👤 Edit My Profile</h3>
-      <p style={styles.subtitle}>Keep your contact, academic, and professional details up to date.</p>
-
-      {message.text && (
-        <div style={{ ...styles.alert, backgroundColor: message.type === 'error' ? '#fee2e2' : '#dcfce3', color: message.type === 'error' ? '#dc2626' : '#16a34a' }}>
-          {message.text}
-        </div>
-      )}
-
+    <div style={s.container}>
+      <h2 style={s.mainTitle}>My Profile Settings</h2>
       <form onSubmit={handleSave}>
-        <div style={styles.photoSection}>
-          <img 
-            src={formData.profilePic ? `${BACKEND_URL}${formData.profilePic}` : 'https://cdn-icons-png.flaticon.com/512/149/149071.png'} 
-            style={styles.avatar} alt="Profile" 
-          />
-          <div>
-            <label style={styles.label}>Profile Picture</label>
-            <input type="file" accept="image/*" onChange={e => setNewProfilePic(e.target.files[0])} style={styles.fileInput} />
+        
+        {/* SECTION 1: IDENTITY */}
+        <div style={s.section}>1. Personal Identity</div>
+        <div style={s.grid}>
+          <div style={s.field}><label style={s.label}>First Name</label><input name="firstName" value={formData.firstName || ''} onChange={handleChange} style={s.input} /></div>
+          <div style={s.field}><label style={s.label}>Last Name</label><input name="lastName" value={formData.lastName || ''} onChange={handleChange} style={s.input} /></div>
+          <div style={s.field}><label style={s.label}>Email Address</label><input name="email" type="email" value={formData.email || ''} onChange={handleChange} style={s.input} /></div>
+          
+          {/* MOBILE FIELDS */}
+          <div style={s.field}>
+             <label style={s.label}>Mobile (Code + Number)</label>
+             <div style={{display:'flex', gap:'10px'}}>
+               <input 
+                 name="countryCode" 
+                 placeholder="+91" 
+                 value={formData.countryCode || ''} 
+                 onChange={handleChange} 
+                 style={{...s.input, width:'80px', flex:'none'}} 
+               />
+               <input 
+                 name="mobile" 
+                 placeholder="Mobile Number" 
+                 value={formData.mobile || ''} 
+                 onChange={handleChange} 
+                 style={{...s.input, flex:1}} 
+               />
+             </div>
           </div>
-        </div>
 
-        <h4 style={styles.sectionTitle}>1. Personal Identity</h4>
-        <div style={styles.grid}>
-          <div style={styles.field}><label style={styles.label}>First Name</label><input name="firstName" required value={formData.firstName || ''} onChange={handleChange} style={styles.input} /></div>
-          <div style={styles.field}><label style={styles.label}>Last Name</label><input name="lastName" required value={formData.lastName || ''} onChange={handleChange} style={styles.input} /></div>
-          <div style={styles.field}><label style={styles.label}>Email Address</label><input name="email" required type="email" value={formData.email || ''} onChange={handleChange} style={styles.input} /></div>
-          <div style={{display: 'flex', gap: '10px'}}>
-            <div style={{...styles.field, width: '70px'}}><label style={styles.label}>Code</label><input name="countryCode" value={formData.countryCode || ''} onChange={handleChange} style={styles.input} /></div>
-            <div style={{...styles.field, flex: 1}}><label style={styles.label}>Mobile</label><input name="mobile" required value={formData.mobile || ''} onChange={handleChange} style={styles.input} /></div>
-          </div>
-          <div style={styles.field}><label style={styles.label}>Birthdate</label><input name="birthdate" type="date" value={formData.birthdate ? formData.birthdate.split('T')[0] : ''} onChange={handleChange} style={styles.input} /></div>
-          <div style={styles.field}>
-            <label style={styles.label}>Sex</label>
-            <select name="sex" value={formData.sex || ''} onChange={handleChange} style={styles.input}>
-              <option value="">Select...</option><option value="Male">Male</option><option value="Female">Female</option><option value="Other">Other</option>
+          <div style={s.field}><label style={s.label}>Birthdate</label><input name="birthdate" type="date" value={formatDate(formData.birthdate)} onChange={handleChange} style={s.input} /></div>
+          <div style={s.field}>
+            <label style={s.label}>Sex</label>
+            <select name="sex" value={formData.sex || ''} onChange={handleChange} style={s.input}>
+              <option value="">Select...</option>{options.genders.map(g => <option key={g} value={g}>{g}</option>)}
             </select>
           </div>
-          <div style={styles.field}>
-            <label style={styles.label}>Marital Status</label>
-            <select name="maritalStatus" value={formData.maritalStatus || ''} onChange={handleChange} style={styles.input}>
-              <option value="Single">Single</option><option value="Married">Married</option><option value="Divorced">Divorced</option><option value="Widowed">Widowed</option>
-            </select>
-          </div>
-        </div>
-
-        <h4 style={styles.sectionTitle}>2. Academic Details</h4>
-        <div style={styles.grid}>
-          <div style={styles.field}><label style={styles.label}>Batch (Year)</label><input name="yearOfGraduation" type="number" value={formData.yearOfGraduation || ''} onChange={handleChange} style={styles.input} /></div>
-          <div style={styles.field}>
-            <label style={styles.label}>Hall of Residence</label>
-            <select name="hall" value={formData.hall || ''} onChange={handleChange} style={styles.input}>
-              <option value="">Select Hall...</option>
-              {HALLS.map(h => <option key={h} value={h}>{h}</option>)}
-            </select>
-          </div>
-          <div style={styles.field}>
-            <label style={styles.label}>Degree</label>
-            <select name="degree" value={formData.degree || ''} onChange={handleChange} style={styles.input}>
-              <option value="">Select Degree...</option>
-              {DEGREES.map(d => <option key={d} value={d}>{d}</option>)}
-            </select>
-          </div>
-          <div style={styles.field}>
-            <label style={styles.label}>Department</label>
-            <select name="department" value={formData.department || ''} onChange={handleChange} style={styles.input}>
-              <option value="">Select Department...</option>
-              {DEPARTMENTS.map(dept => <option key={dept} value={dept}>{dept}</option>)}
+          <div style={s.field}>
+            <label style={s.label}>Marital Status</label>
+            <select name="maritalStatus" value={formData.maritalStatus || ''} onChange={handleChange} style={s.input}>
+              <option value="">Select...</option>{options.maritalStatuses.map(m => <option key={m} value={m}>{m}</option>)}
             </select>
           </div>
         </div>
 
-        <h4 style={styles.sectionTitle}>3. Professional & Address</h4>
-        <div style={styles.grid}>
-          <div style={styles.field}><label style={styles.label}>Current Occupation</label><input name="currentOccupation" value={formData.currentOccupation || ''} onChange={handleChange} style={styles.input} /></div>
-          <div style={styles.field}><label style={styles.label}>Referred By</label><input name="referredBy" placeholder="If applicable" value={formData.referredBy || ''} onChange={handleChange} style={styles.input} /></div>
-          <div style={{...styles.field, gridColumn: 'span 2'}}><label style={styles.label}>Residence Address</label><textarea name="residenceAddress" rows="2" value={formData.residenceAddress || ''} onChange={handleChange} style={styles.input} /></div>
-          <div style={{...styles.field, gridColumn: 'span 2'}}><label style={styles.label}>Office Address</label><textarea name="officeAddress" rows="2" value={formData.officeAddress || ''} onChange={handleChange} style={styles.input} /></div>
-        </div>
-
-        <h4 style={styles.sectionTitle}>4. Family Details</h4>
-        <div style={styles.grid}>
-          <div style={styles.field}><label style={styles.label}>Spouse First Name</label><input name="spouseFirstName" value={formData.spouseFirstName || ''} onChange={handleChange} style={styles.input} /></div>
-          <div style={styles.field}><label style={styles.label}>Spouse Last Name</label><input name="spouseLastName" value={formData.spouseLastName || ''} onChange={handleChange} style={styles.input} /></div>
-          <div style={styles.field}><label style={styles.label}>Spouse Birthdate</label><input name="spouseBirthdate" type="date" value={formData.spouseBirthdate ? formData.spouseBirthdate.split('T')[0] : ''} onChange={handleChange} style={styles.input} /></div>
-          <div style={styles.field}><label style={styles.label}>Anniversary Date</label><input name="anniversaryDate" type="date" value={formData.anniversaryDate ? formData.anniversaryDate.split('T')[0] : ''} onChange={handleChange} style={styles.input} /></div>
-          <div style={styles.field}><label style={styles.label}>Number of Children</label><input name="numberOfChildren" type="number" value={formData.numberOfChildren || 0} onChange={handleChange} style={styles.input} /></div>
-        </div>
-
-        {/* --- NEW: READ ONLY MEMBERSHIP FIELDS --- */}
-        <h4 style={styles.sectionTitle}>5. Membership Status</h4>
-        <div style={styles.grid}>
-          <div style={styles.field}>
-            <label style={styles.label}>Membership Type</label>
-            <input 
-              disabled 
-              value={formData.isLifeMember ? 'Life Member ⭐' : 'General Member'} 
-              style={{...styles.input, backgroundColor: '#f1f5f9', color: '#64748b', cursor: 'not-allowed'}} 
-            />
+        {/* SECTION 2: ACADEMIC */}
+        <div style={s.section}>2. Academic Details</div>
+        <div style={s.grid}>
+          <div style={s.field}>
+            <label style={s.label}>Degree</label>
+            <select name="degree" value={formData.degree || ''} onChange={handleChange} style={s.input}>
+              <option value="">Select...</option>{options.degrees.map(d => <option key={d} value={d}>{d}</option>)}
+            </select>
           </div>
-          <div style={styles.field}>
-            <label style={styles.label}>Life Member Number</label>
-            <input 
-              disabled 
-              value={formData.lifeMemberNumber || 'N/A'} 
-              style={{...styles.input, backgroundColor: '#f1f5f9', color: '#64748b', cursor: 'not-allowed'}} 
-            />
+          <div style={s.field}>
+            <label style={s.label}>Department</label>
+            <select name="department" value={formData.department || ''} onChange={handleChange} style={s.input}>
+              <option value="">Select...</option>{options.departments.map(d => <option key={d} value={d}>{d}</option>)}
+            </select>
+          </div>
+          <div style={s.field}>
+            <label style={s.label}>Hall of Residence</label>
+            <select name="hall" value={formData.hall || ''} onChange={handleChange} style={s.input}>
+              <option value="">Select...</option>{options.halls.map(h => <option key={h} value={h}>{h}</option>)}
+            </select>
+          </div>
+          <div style={s.field}><label style={s.label}>Graduation Year</label><input name="yearOfGraduation" type="number" value={formData.yearOfGraduation || ''} onChange={handleChange} style={s.input} /></div>
+        </div>
+
+        {/* SECTION 3: SPOUSE & FAMILY */}
+        <div style={s.section}>3. Spouse & Family Details</div>
+        <div style={s.grid}>
+          <div style={s.field}><label style={s.label}>Spouse First Name</label><input name="spouseFirstName" value={formData.spouseFirstName || ''} onChange={handleChange} style={s.input} /></div>
+          <div style={s.field}><label style={s.label}>Spouse Last Name</label><input name="spouseLastName" value={formData.spouseLastName || ''} onChange={handleChange} style={s.input} /></div>
+          <div style={s.field}><label style={s.label}>Spouse Birthdate</label><input name="spouseBirthdate" type="date" value={formatDate(formData.spouseBirthdate)} onChange={handleChange} style={s.input} /></div>
+          <div style={s.field}><label style={s.label}>Anniversary Date</label><input name="anniversaryDate" type="date" value={formatDate(formData.anniversaryDate)} onChange={handleChange} style={s.input} /></div>
+          <div style={s.field}><label style={s.label}>Number of Children</label><input name="numberOfChildren" type="number" value={formData.numberOfChildren || 0} onChange={handleChange} style={s.input} /></div>
+        </div>
+
+        {/* SECTION 4: PROFESSIONAL, ADDRESSES & MEMBERSHIP */}
+        <div style={s.section}>4. Professional & Membership</div>
+        <div style={s.grid}>
+          <div style={s.field}><label style={s.label}>Current Occupation</label><input name="currentOccupation" value={formData.currentOccupation || ''} onChange={handleChange} style={s.input} /></div>
+          <div style={s.field}><label style={s.label}>Referred By</label><input name="referredBy" value={formData.referredBy || ''} onChange={handleChange} style={s.input} /></div>
+          <div style={s.field}><label style={s.label}>Life Member No.</label><input name="lifeMemberNumber" value={formData.lifeMemberNumber || ''} onChange={handleChange} style={s.input} /></div>
+          <div style={{display:'flex', alignItems:'center', gap:'10px', marginTop:'20px'}}>
+             <input name="isLifeMember" type="checkbox" checked={formData.isLifeMember || false} onChange={handleChange} style={{width:'18px', height:'18px'}} />
+             <label style={{fontWeight:'bold', fontSize:'0.85rem'}}>Life Member</label>
+          </div>
+          <div style={{gridColumn:'span 2'}}>
+            <label style={s.label}>Office Address</label>
+            <textarea name="officeAddress" value={formData.officeAddress || ''} onChange={handleChange} style={s.textarea} />
+          </div>
+          <div style={{gridColumn:'span 2'}}>
+            <label style={s.label}>Residence Address</label>
+            <textarea name="residenceAddress" value={formData.residenceAddress || ''} onChange={handleChange} style={s.textarea} />
           </div>
         </div>
 
-        <div style={styles.footer}>
-          <button type="submit" disabled={loading} style={styles.btnSave}>
-            {loading ? 'Processing...' : 'Save Profile Updates'}
+        {/* SECTION 5: PROFILE PICTURE */}
+        <div style={s.section}>5. Profile Picture</div>
+        <div style={{display:'flex', alignItems:'center', gap:'20px', marginTop:'10px'}}>
+           {formData.profilePic && !image && (
+             <img src={`${BACKEND_URL}${formData.profilePic}`} alt="Current" style={{width:'60px', height:'60px', borderRadius:'50%', objectFit:'cover'}} />
+           )}
+           <input type="file" accept="image/*" onChange={e => setImage(e.target.files[0])} />
+        </div>
+
+        {/* ACTIONS */}
+        <div style={s.footer}>
+          <button type="button" onClick={handleDiscard} style={s.btnDiscard}>Discard Changes</button>
+          <button type="submit" disabled={saving} style={s.btnSave}>
+            {saving ? 'Saving...' : 'Save All Changes'}
           </button>
         </div>
       </form>
@@ -171,21 +220,18 @@ const ProfileEdit = ({ userData, refreshData }) => {
   );
 };
 
-const styles = {
-  card: { backgroundColor: '#fff', padding: '30px', borderRadius: '12px', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' },
-  title: { margin: '0 0 5px 0', color: '#001f3f' },
-  subtitle: { margin: '0 0 25px 0', color: '#64748b', fontSize: '0.85rem' },
-  sectionTitle: { margin: '30px 0 15px 0', paddingBottom: '5px', borderBottom: '2px solid #fbbf24', color: '#001f3f', fontWeight: 'bold', fontSize: '1rem' },
-  alert: { padding: '12px', borderRadius: '8px', marginBottom: '20px', fontSize: '0.9rem', fontWeight: 'bold' },
-  photoSection: { display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '25px', paddingBottom: '15px', borderBottom: '1px solid #f1f5f9' },
-  avatar: { width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', border: '3px solid #f8fafc' },
-  fileInput: { display: 'block', marginTop: '8px', fontSize: '0.8rem' },
+const s = {
+  container: { maxWidth: '850px', margin: '20px auto', padding: '30px', background: '#fff', borderRadius: '15px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' },
+  mainTitle: { color: '#001f3f', borderBottom: '3px solid #fbbf24', paddingBottom: '10px', marginBottom: '25px' },
+  section: { fontWeight: 'bold', marginTop: '30px', marginBottom: '15px', color: '#001f3f', fontSize: '1rem', textTransform: 'uppercase', letterSpacing: '1px', borderBottom: '1px solid #eee', paddingBottom: '5px' },
   grid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' },
-  field: { display: 'flex', flexDirection: 'column', gap: '6px' },
-  label: { fontSize: '0.75rem', fontWeight: '800', color: '#1e293b', textTransform: 'uppercase', letterSpacing: '0.05em' },
-  input: { padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '0.95rem', outline: 'none', transition: 'border-color 0.2s' },
-  footer: { marginTop: '30px', paddingTop: '20px', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'flex-end' },
-  btnSave: { padding: '12px 30px', backgroundColor: '#001f3f', color: '#fbbf24', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '1rem' }
+  input: { padding: '12px', borderRadius: '8px', border: '1px solid #ddd', width: '100%', boxSizing: 'border-box', fontSize: '0.95rem', backgroundColor: '#fff' },
+  textarea: { width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ddd', height: '80px', boxSizing: 'border-box', fontSize: '0.95rem', fontFamily: 'inherit', resize: 'vertical' },
+  label: { fontSize: '0.75rem', fontWeight: 'bold', color: '#64748b', marginBottom: '5px', display: 'block', textTransform: 'uppercase' },
+  field: { display: 'flex', flexDirection: 'column' },
+  footer: { display: 'flex', justifyContent: 'flex-end', gap: '15px', marginTop: '40px', borderTop: '2px solid #eee', paddingTop: '20px' },
+  btnSave: { flex: 2, padding: '16px', background: '#001f3f', color: '#fbbf24', border: 'none', borderRadius: '12px', fontWeight: 'bold', fontSize: '1rem', cursor: 'pointer', transition: '0.3s' },
+  btnDiscard: { flex: 1, padding: '16px', background: '#f8fafc', color: '#475569', border: '1px solid #cbd5e1', borderRadius: '12px', fontWeight: 'bold', fontSize: '1rem', cursor: 'pointer', transition: '0.3s' }
 };
 
 export default ProfileEdit;

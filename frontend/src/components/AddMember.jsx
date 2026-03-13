@@ -1,271 +1,182 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
 
-// --- CONFIGURATION ARRAYS ---
-const DEGREES = [
-  "B.Tech", "B.Arch", "Dual Degree", "M.Tech", "M.Sc", "MBA", 
-  "Ph.D", "MS", "MCP", "MMST", "LLB", "LLM", "Other"
-];
+const AddMember = ({ refresh }) => {
+  const initialState = {
+    firstName: '', lastName: '', email: '', countryCode: '+91', mobile: '', birthdate: '',
+    sex: '', maritalStatus: '', degree: '', department: '', hall: '', yearOfGraduation: '',
+    currentOccupation: '', residenceAddress: '', officeAddress: '', spouseFirstName: '',
+    spouseLastName: '', spouseBirthdate: '', anniversaryDate: '', numberOfChildren: 0,
+    lifeMemberNumber: '', isLifeMember: false, referredBy: '', password: 'Password123'
+  };
 
-const DEPARTMENTS = [
-  "Aerospace Engineering", "Advanced Technology Centre", "Agricultural & Food Engineering",
-  "Architecture & Regional Planning", "Biotechnology", "Centre for Theoretical Studies",
-  "Chemical Engineering", "Chemistry", "Civil Engineering", "Computer Science & Engineering",
-  "Cyrogenic Engineering", "Center for Educational Technology", "Energy Science and Engineering",
-  "Energy Engineering", "Electrical Engineering", "Electronics & Electrical Communications Engineering",
-  "Exploration Geophysics", "GS Sanyal School of Telecommunications (GS)",
-  "GS Sanyal School of Telecommunications (TE)", "Geology & Geophysics", "Humanities & Social Sciences",
-  "Industrial Engineering & Management", "Instrumentation Engineering", "School of Information Technology",
-  "Material Science", "Mathematics", "Manufacturing Engineering", "Mechanical Engineering",
-  "Medical Science & Technology", "Metallurgical Engineering", "Mining Engineering",
-  "Ocean Engineering & Naval Architecture", "Ocean, Rivers, Atmosphere & Land Sciences",
-  "Physics & Meteorology", "Quality Engineering Design and Manufacturing",
-  "Rajendra Mishra School of Engineering Entrepreneurship", "Rajeev Gandhi School of Intellectual Property Law",
-  "Ranbir and Chitra Gupta School of Infrastructure Design and Management", "Reliability Engineering",
-  "Rubber Technology Center", "Rural Development Centre", "School of Water Resources",
-  "Steel Technology Centre", "Statistics and Informatics", "Vinod Gupta School of Management", "Other"
-];
-
-const HALLS = [
-  "Ashutosh Mukherjee", "Azad", "Bhidan Chandra Roy", "Campus", "Dr. B R Ambedkar",
-  "Gokhale", "Homi J Bhabha", "Jagadish Chandra Bose", "Lala Lajpat Rai", "Lalbahadur Sastry",
-  "Madan Mohan Malaviya", "Meghnad Saha", "Mother Teresa", "Nehru", "Patel", "Radhakrishnan",
-  "Rajendra Prasad", "Rani Laxmi Bai", "Sarojini Naidu / Indira Gandhi", "Vidyasagar",
-  "Zakir Hussain", "Vikram Sarabhai Residential Complex", "Institute Quarter", "Bachelors Flat",
-  "Rader Flats", "Other"
-];
-// ----------------------------
-
-const AddMember = ({ onSuccess }) => {
-  const [formData, setFormData] = useState({
-    firstName: '', lastName: '', email: '', countryCode: '+91', mobile: '',
-    birthdate: '', sex: '', maritalStatus: 'Single', lifeMemberNumber: '', 
-    yearOfGraduation: '', department: '', degree: '', hall: '', currentOccupation: '',
-    residenceAddress: '', officeAddress: '', spouseFirstName: '', spouseLastName: '',
-    anniversaryDate: '', spouseBirthdate: '', numberOfChildren: 0, referredBy: ''
+  const [formData, setFormData] = useState(initialState);
+  const [options, setOptions] = useState({ 
+    degrees: [], departments: [], halls: [], maritalStatuses: [], genders: ['Male', 'Female', 'Other'] 
   });
-  
-  const [profilePic, setProfilePic] = useState(null);
   const [loading, setLoading] = useState(false);
-  
-  // NEW STATE: To hold the list of members for the dropdown
-  const [existingMembers, setExistingMembers] = useState([]);
+  const [image, setImage] = useState(null);
 
-  // NEW HOOK: Fetch the members when the form loads
   useEffect(() => {
-    api.get('/api/alumni')
-      .then(res => setExistingMembers(res.data))
-      .catch(err => console.error("Could not load reference members", err));
+    api.get('/api/config')
+      .then(res => {
+        setOptions({
+          degrees: res.data.degrees || [],
+          departments: res.data.departments || [],
+          halls: res.data.halls || [],
+          maritalStatuses: res.data.maritalStatuses || [],
+          genders: res.data.genders || ['Male', 'Female', 'Other']
+        });
+      })
+      .catch(err => console.error("Config Load Error:", err));
   }, []);
 
-  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData({ ...formData, [name]: type === 'checkbox' ? checked : value });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    
-    const data = new FormData();
-    Object.keys(formData).forEach(key => {
-      // THE FIX: We added `&& formData[key] !== ''`
-      // This stops us from sending empty strings to Date/Number fields in MongoDB!
-      if (formData[key] !== null && formData[key] !== undefined && formData[key] !== '') {
-        data.append(key, formData[key]);
-      }
-    });
-    
-    if (profilePic) data.append('profilePic', profilePic);
-
     try {
+      const data = new FormData();
+      Object.keys(formData).forEach(key => {
+        if (formData[key] !== undefined && formData[key] !== null) {
+          data.append(key, formData[key]);
+        }
+      });
+      if (image) data.append('profilePic', image);
+
       await api.post('/api/alumni/register', data);
-      setLoading(false);
-      onSuccess(); 
+      alert("Member Added Successfully!");
+      setFormData(initialState);
+      setImage(null);
+      if (refresh) refresh();
     } catch (err) {
-      // If it still fails, this will print the EXACT reason to your browser console
-      console.error("Backend Error Details:", err.response?.data || err.message);
-      alert(`Registration failed: ${err.response?.data?.message || "Please check your details"}`);
+      alert(err.response?.data?.message || "Registration failed");
+    } finally {
       setLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} style={styles.form}>
-      {/* SECTION 1: PERSONAL IDENTITY */}
-      <h3 style={styles.sectionTitle}>1. Personal Identity</h3>
-      <div style={styles.grid}>
-        <div style={styles.inputGroup}>
-          <label style={styles.label}>First Name *</label>
-          <input name="firstName" required onChange={handleChange} style={styles.input} />
-        </div>
-        <div style={styles.inputGroup}>
-          <label style={styles.label}>Last Name *</label>
-          <input name="lastName" required onChange={handleChange} style={styles.input} />
-        </div>
-        <div style={styles.inputGroup}>
-          <label style={styles.label}>Email Address *</label>
-          <input name="email" type="email" required onChange={handleChange} style={styles.input} />
-        </div>
-        <div style={styles.inputGroup}>
-          <label style={styles.label}>Mobile (10 Digits) *</label>
-          <div style={{ display: 'flex', gap: '5px' }}>
-            <input name="countryCode" value={formData.countryCode} onChange={handleChange} style={{ ...styles.input, width: '60px' }} />
-            <input name="mobile" required onChange={handleChange} style={{ ...styles.input, flex: 1 }} placeholder="9876543210" />
+    <div style={s.container}>
+      <h3 style={s.title}>Add New Member</h3>
+      <form onSubmit={handleSubmit}>
+        
+        {/* SECTION 1: IDENTITY */}
+        <div style={s.section}>1. Personal Identity</div>
+        <div style={s.grid}>
+          <div style={s.field}><label style={s.label}>First Name</label><input name="firstName" value={formData.firstName} onChange={handleChange} style={s.input} required /></div>
+          <div style={s.field}><label style={s.label}>Last Name</label><input name="lastName" value={formData.lastName} onChange={handleChange} style={s.input} required /></div>
+          <div style={s.field}><label style={s.label}>Email Address</label><input name="email" type="email" value={formData.email} onChange={handleChange} style={s.input} required /></div>
+          
+          {/* FIXED MOBILE CSS */}
+          <div style={s.field}>
+             <label style={s.label}>Mobile (Code + Number)</label>
+             <div style={{display:'flex', gap:'8px'}}>
+               <input name="countryCode" placeholder="+91" value={formData.countryCode} onChange={handleChange} style={{...s.input, width:'80px', flex:'none'}} />
+               <input name="mobile" placeholder="Mobile Number" value={formData.mobile} onChange={handleChange} style={{...s.input, flex:1}} />
+             </div>
+          </div>
+
+          <div style={s.field}><label style={s.label}>Birthdate</label><input name="birthdate" type="date" value={formData.birthdate} onChange={handleChange} style={s.input} /></div>
+          <div style={s.field}>
+            <label style={s.label}>Sex</label>
+            <select name="sex" value={formData.sex} onChange={handleChange} style={s.input} required>
+              <option value="">Select...</option>{options.genders.map(g => <option key={g} value={g}>{g}</option>)}
+            </select>
+          </div>
+          <div style={s.field}>
+            <label style={s.label}>Marital Status</label>
+            <select name="maritalStatus" value={formData.maritalStatus} onChange={handleChange} style={s.input}>
+              <option value="">Select...</option>{options.maritalStatuses.map(m => <option key={m} value={m}>{m}</option>)}
+            </select>
           </div>
         </div>
-        <div style={styles.inputGroup}>
-          <label style={styles.label}>Birthdate *</label>
-          <input name="birthdate" type="date" required onChange={handleChange} style={styles.input} />
-        </div>
-        <div style={styles.inputGroup}>
-          <label style={styles.label}>Sex *</label>
-          <select name="sex" required onChange={handleChange} style={styles.input}>
-            <option value="">Select...</option>
-            <option value="Male">Male</option>
-            <option value="Female">Female</option>
-            <option value="Other">Other</option>
-          </select>
-        </div>
-        <div style={styles.inputGroup}>
-          <label style={styles.label}>Marital Status *</label>
-          <select name="maritalStatus" required onChange={handleChange} style={styles.input}>
-            <option value="Single">Single</option>
-            <option value="Married">Married</option>
-            <option value="Divorced">Divorced</option>
-            <option value="Separated">Separated</option>
-            <option value="Widowed">Widowed</option>
-          </select>
-        </div>
-        <div style={styles.inputGroup}>
-          <label style={styles.label}>Life Member Number (If any)</label>
-          <input name="lifeMemberNumber" onChange={handleChange} style={styles.input} placeholder="LM-XXXX" />
-        </div>
-      </div>
 
-      {/* SECTION 2: ACADEMIC DETAILS */}
-      <h3 style={styles.sectionTitle}>2. Academic Details</h3>
-      <div style={styles.grid}>
-        <div style={styles.inputGroup}>
-          <label style={styles.label}>Batch (Year of Graduation) *</label>
-          <input name="yearOfGraduation" type="number" required onChange={handleChange} style={styles.input} />
+        {/* SECTION 2: ACADEMIC */}
+        <div style={s.section}>2. Academic Details</div>
+        <div style={s.grid}>
+          <div style={s.field}>
+            <label style={s.label}>Degree</label>
+            <select name="degree" value={formData.degree} onChange={handleChange} style={s.input}>
+              <option value="">Select...</option>{options.degrees.map(d => <option key={d} value={d}>{d}</option>)}
+            </select>
+          </div>
+          <div style={s.field}>
+            <label style={s.label}>Department</label>
+            <select name="department" value={formData.department} onChange={handleChange} style={s.input}>
+              <option value="">Select...</option>{options.departments.map(d => <option key={d} value={d}>{d}</option>)}
+            </select>
+          </div>
+          <div style={s.field}>
+            <label style={s.label}>Hall of Residence</label>
+            <select name="hall" value={formData.hall} onChange={handleChange} style={s.input}>
+              <option value="">Select...</option>{options.halls.map(h => <option key={h} value={h}>{h}</option>)}
+            </select>
+          </div>
+          <div style={s.field}><label style={s.label}>Graduation Year</label><input name="yearOfGraduation" type="number" value={formData.yearOfGraduation} onChange={handleChange} style={s.input} /></div>
         </div>
-        <div style={styles.inputGroup}>
-          <label style={styles.label}>Hall of Residence *</label>
-          <select name="hall" required onChange={handleChange} style={styles.input} value={formData.hall}>
-            <option value="">Select Hall...</option>
-            {HALLS.map(hall => <option key={hall} value={hall}>{hall}</option>)}
-          </select>
-        </div>
-        <div style={styles.inputGroup}>
-          <label style={styles.label}>Degree *</label>
-          <select name="degree" required onChange={handleChange} style={styles.input} value={formData.degree}>
-            <option value="">Select Degree...</option>
-            {DEGREES.map(deg => <option key={deg} value={deg}>{deg}</option>)}
-          </select>
-        </div>
-        <div style={styles.inputGroup}>
-          <label style={styles.label}>Department *</label>
-          <select name="department" required onChange={handleChange} style={styles.input} value={formData.department}>
-            <option value="">Select Department...</option>
-            {DEPARTMENTS.map(dept => <option key={dept} value={dept}>{dept}</option>)}
-          </select>
-        </div>
-      </div>
 
-      {/* SECTION 3: PROFESSIONAL & ADDRESS */}
-      <h3 style={styles.sectionTitle}>3. Professional & Address</h3>
-      <div style={styles.grid}>
-        <div style={styles.inputGroup}>
-          <label style={styles.label}>Current Occupation</label>
-          <input name="currentOccupation" onChange={handleChange} style={styles.input} />
+        {/* SECTION 3: SPOUSE & FAMILY */}
+        <div style={s.section}>3. Spouse & Family Details</div>
+        <div style={s.grid}>
+          <div style={s.field}><label style={s.label}>Spouse First Name</label><input name="spouseFirstName" value={formData.spouseFirstName} onChange={handleChange} style={s.input} /></div>
+          <div style={s.field}><label style={s.label}>Spouse Last Name</label><input name="spouseLastName" value={formData.spouseLastName} onChange={handleChange} style={s.input} /></div>
+          <div style={s.field}><label style={s.label}>Spouse Birthdate</label><input name="spouseBirthdate" type="date" value={formData.spouseBirthdate} onChange={handleChange} style={s.input} /></div>
+          <div style={s.field}><label style={s.label}>Anniversary Date</label><input name="anniversaryDate" type="date" value={formData.anniversaryDate} onChange={handleChange} style={s.input} /></div>
+          <div style={s.field}><label style={s.label}>Number of Children</label><input name="numberOfChildren" type="number" value={formData.numberOfChildren} onChange={handleChange} style={s.input} /></div>
         </div>
-      </div>
-      <div style={{ ...styles.inputGroup, marginTop: '15px' }}>
-        <label style={styles.label}>Residence Address *</label>
-        <textarea name="residenceAddress" required onChange={handleChange} style={{ ...styles.input, height: '60px' }} />
-      </div>
-      <div style={{ ...styles.inputGroup, marginTop: '15px' }}>
-        <label style={styles.label}>Office Address</label>
-        <textarea name="officeAddress" onChange={handleChange} style={{ ...styles.input, height: '60px' }} />
-      </div>
 
-      {/* SECTION 4: FAMILY DETAILS */}
-      <h3 style={styles.sectionTitle}>4. Family Details</h3>
-      <div style={styles.grid}>
-        <div style={styles.inputGroup}>
-          <label style={styles.label}>Spouse First Name</label>
-          <input name="spouseFirstName" onChange={handleChange} style={styles.input} />
+        {/* SECTION 4: PROFESSIONAL, ADDRESSES & MEMBERSHIP */}
+        <div style={s.section}>4. Professional & Membership</div>
+        <div style={s.grid}>
+          <div style={s.field}><label style={s.label}>Current Occupation</label><input name="currentOccupation" value={formData.currentOccupation} onChange={handleChange} style={s.input} /></div>
+          
+          {/* REFERRED BY ADDED HERE */}
+          <div style={s.field}><label style={s.label}>Referred By</label><input name="referredBy" value={formData.referredBy} onChange={handleChange} style={s.input} /></div>
+          
+          <div style={s.field}><label style={s.label}>Life Member No.</label><input name="lifeMemberNumber" value={formData.lifeMemberNumber} onChange={handleChange} style={s.input} /></div>
+          <div style={{display:'flex', alignItems:'center', gap:'10px', marginTop:'20px'}}>
+             <input name="isLifeMember" type="checkbox" checked={formData.isLifeMember} onChange={handleChange} style={{width:'18px', height:'18px'}} />
+             <label style={{fontWeight:'bold', fontSize:'0.85rem'}}>Life Member</label>
+          </div>
+          <div style={{gridColumn:'span 2'}}>
+            <label style={s.label}>Office Address</label>
+            <textarea name="officeAddress" value={formData.officeAddress} onChange={handleChange} style={s.textarea} />
+          </div>
+          <div style={{gridColumn:'span 2'}}>
+            <label style={s.label}>Residence Address</label>
+            <textarea name="residenceAddress" value={formData.residenceAddress} onChange={handleChange} style={s.textarea} />
+          </div>
         </div>
-        <div style={styles.inputGroup}>
-          <label style={styles.label}>Spouse Last Name</label>
-          <input name="spouseLastName" onChange={handleChange} style={styles.input} />
-        </div>
-        <div style={styles.inputGroup}>
-          <label style={styles.label}>Spouse Birthdate</label>
-          <input name="spouseBirthdate" type="date" onChange={handleChange} style={styles.input} />
-        </div>
-        <div style={styles.inputGroup}>
-          <label style={styles.label}>Anniversary Date</label>
-          <input name="anniversaryDate" type="date" onChange={handleChange} style={styles.input} />
-        </div>
-        <div style={styles.inputGroup}>
-          <label style={styles.label}>Number of Children</label>
-          <input name="numberOfChildren" type="number" onChange={handleChange} style={styles.input} />
-        </div>
-      </div>
 
-      {/* SECTION 5: MEDIA & REFERENCE */}
-      <h3 style={styles.sectionTitle}>5. Finalize Profile</h3>
-      
-      <div style={styles.uploadBox}>
-        <label style={{...styles.label, marginBottom: '8px', display: 'block'}}>Profile Picture (Optional)</label>
-        <input 
-          type="file" 
-          accept="image/png, image/jpeg, image/jpg"
-          onChange={(e) => setProfilePic(e.target.files[0])} 
-          style={styles.fileInput} 
-        />
-        <p style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '5px', margin: 0 }}>
-          Recommended: Square image, max 5MB.
-        </p>
-      </div>
+        {/* SECTION 5: PROFILE PICTURE */}
+        <div style={s.section}>5. Profile Picture</div>
+        <div style={{marginTop:'10px'}}>
+           <input type="file" accept="image/*" onChange={e => setImage(e.target.files[0])} style={{display:'block'}} />
+        </div>
 
-      {/* --- REFERRED BY DATALIST --- */}
-      <div style={styles.refBox}>
-        <label style={{ ...styles.label, color: '#856404' }}>Referred By (Reference Name)</label>
-        <input 
-          list="reference-members-list"
-          name="referredBy" 
-          onChange={handleChange} 
-          style={{ ...styles.input, borderColor: '#ffeeba', width: '100%', boxSizing: 'border-box' }} 
-          placeholder="Start typing a member's name..." 
-        />
-        <datalist id="reference-members-list">
-          {existingMembers.map(m => (
-            <option 
-              key={m._id} 
-              value={`${m.firstName} ${m.lastName} - Batch of ${m.yearOfGraduation}`} 
-            />
-          ))}
-        </datalist>
-      </div>
-
-      <button type="submit" disabled={loading} style={styles.submitBtn}>
-        {loading ? 'Processing Registration...' : 'Complete Registration'}
-      </button>
-    </form>
+        <button type="submit" disabled={loading} style={s.btn}>
+          {loading ? 'Saving...' : 'Register Member'}
+        </button>
+      </form>
+    </div>
   );
 };
 
-const styles = {
-  form: { padding: '10px' },
-  sectionTitle: { fontSize: '1.1rem', color: '#001f3f', borderBottom: '2px solid #fbbf24', paddingBottom: '5px', marginTop: '30px', marginBottom: '15px' },
+const s = {
+  container: { padding: '20px', background: '#fff', borderRadius: '12px', border: '1px solid #eee' },
+  title: { color: '#001f3f', marginBottom: '20px', borderBottom: '2px solid #fbbf24', display: 'inline-block', paddingBottom: '5px' },
+  section: { fontWeight: 'bold', color: '#001f3f', marginTop: '30px', marginBottom: '15px', fontSize: '0.9rem', textTransform: 'uppercase', borderBottom: '1px solid #eee', paddingBottom: '5px' },
   grid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' },
-  inputGroup: { display: 'flex', flexDirection: 'column', marginBottom: '10px' },
-  label: { fontSize: '0.8rem', fontWeight: 'bold', color: '#475569', marginBottom: '5px' },
-  input: { padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '0.9rem', outline: 'none', backgroundColor: '#fff' },
-  uploadBox: { backgroundColor: '#f8fafc', padding: '15px', borderRadius: '12px', border: '1px dashed #cbd5e1', marginBottom: '15px' },
-  fileInput: { fontSize: '0.9rem', color: '#334155', width: '100%', cursor: 'pointer' },
-  refBox: { marginTop: '20px', backgroundColor: '#fff9e6', padding: '15px', borderRadius: '12px', border: '1px solid #ffeeba' },
-  submitBtn: { marginTop: '30px', width: '100%', padding: '15px', backgroundColor: '#001f3f', color: '#fbbf24', border: 'none', borderRadius: '12px', fontWeight: 'bold', fontSize: '1rem', cursor: 'pointer', transition: '0.3s' }
+  input: { padding: '10px', borderRadius: '8px', border: '1px solid #ddd', width: '100%', boxSizing: 'border-box', backgroundColor: '#fff' },
+  textarea: { width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', height: '60px', boxSizing: 'border-box', fontFamily: 'inherit', resize: 'vertical' },
+  label: { fontSize: '0.7rem', color: '#64748b', marginBottom: '4px', fontWeight: 'bold', textTransform: 'uppercase', display: 'block' },
+  field: { display: 'flex', flexDirection: 'column' },
+  btn: { width: '100%', padding: '15px', background: '#001f3f', color: '#fbbf24', border: 'none', borderRadius: '8px', fontWeight: 'bold', marginTop: '30px', cursor: 'pointer', fontSize: '1rem' }
 };
 
 export default AddMember;
