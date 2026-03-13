@@ -72,7 +72,6 @@ const AddMember = ({ refresh }) => {
           <div style={s.field}><label style={s.label}>Last Name</label><input name="lastName" value={formData.lastName} onChange={handleChange} style={s.input} required /></div>
           <div style={s.field}><label style={s.label}>Email Address</label><input name="email" type="email" value={formData.email} onChange={handleChange} style={s.input} required /></div>
           
-          {/* FIXED MOBILE CSS */}
           <div style={s.field}>
              <label style={s.label}>Mobile (Code + Number)</label>
              <div style={{display:'flex', gap:'8px'}}>
@@ -135,14 +134,33 @@ const AddMember = ({ refresh }) => {
         <div style={s.grid}>
           <div style={s.field}><label style={s.label}>Current Occupation</label><input name="currentOccupation" value={formData.currentOccupation} onChange={handleChange} style={s.input} /></div>
           
-          {/* REFERRED BY ADDED HERE */}
           <div style={s.field}><label style={s.label}>Referred By</label><input name="referredBy" value={formData.referredBy} onChange={handleChange} style={s.input} /></div>
           
-          <div style={s.field}><label style={s.label}>Life Member No.</label><input name="lifeMemberNumber" value={formData.lifeMemberNumber} onChange={handleChange} style={s.input} /></div>
-          <div style={{display:'flex', alignItems:'center', gap:'10px', marginTop:'20px'}}>
-             <input name="isLifeMember" type="checkbox" checked={formData.isLifeMember} onChange={handleChange} style={{width:'18px', height:'18px'}} />
-             <label style={{fontWeight:'bold', fontSize:'0.85rem'}}>Life Member</label>
+          {/* 🌟 LOCKED LIFE MEMBER FIELDS - CLEANED UP */}
+          <div style={s.field}>
+            <label style={s.label}>Life Member No.</label>
+            <input 
+              name="lifeMemberNumber" 
+              value={formData.lifeMemberNumber} 
+              onChange={handleChange} 
+              style={{...s.input, backgroundColor: '#f1f5f9', cursor: 'not-allowed', color: '#94a3b8'}} 
+              disabled 
+              title="Life membership is assigned by admin"
+            />
           </div>
+          <div style={{display:'flex', alignItems:'center', gap:'10px', marginTop:'20px'}}>
+             <input 
+               name="isLifeMember" 
+               type="checkbox" 
+               checked={formData.isLifeMember} 
+               onChange={handleChange} 
+               style={{width:'18px', height:'18px', cursor: 'not-allowed'}} 
+               disabled 
+               title="Life membership is assigned by admin"
+             />
+             <label style={{fontWeight:'bold', fontSize:'0.85rem', color: '#94a3b8'}}>Life Member</label>
+          </div>
+
           <div style={{gridColumn:'span 2'}}>
             <label style={s.label}>Office Address</label>
             <textarea name="officeAddress" value={formData.officeAddress} onChange={handleChange} style={s.textarea} />
@@ -153,18 +171,16 @@ const AddMember = ({ refresh }) => {
           </div>
         </div>
 
-        {/* SECTION 5: PROFILE PICTURE (UPGRADED UI) */}
+        {/* SECTION 5: PROFILE PICTURE */}
         <div style={s.section}>5. Profile Picture</div>
         <div style={{display:'flex', alignItems:'center', gap:'20px', marginTop:'10px', background:'#f8fafc', padding:'15px', borderRadius:'12px', border:'1px solid #e2e8f0'}}>
            
-           {/* IMAGE PREVIEW LOGIC */}
            {image ? (
              <img src={URL.createObjectURL(image)} alt="New Selection" style={{width:'70px', height:'70px', borderRadius:'50%', objectFit:'cover', border:'2px solid #cbd5e1'}} />
            ) : (
              <div style={{width:'70px', height:'70px', borderRadius:'50%', backgroundColor:'#e2e8f0', display:'flex', alignItems:'center', justifyContent:'center', color:'#94a3b8', fontSize:'0.7rem', textAlign:'center', border:'2px dashed #cbd5e1'}}>No Photo</div>
            )}
 
-           {/* CUSTOM FILE INPUT BUTTON */}
            <div style={{display:'flex', flexDirection:'column', gap:'5px'}}>
              <label style={{
                 padding: '8px 16px', background: '#fff', border: '1px solid #cbd5e1', 
@@ -176,7 +192,7 @@ const AddMember = ({ refresh }) => {
                   type="file" 
                   accept="image/*" 
                   onChange={e => setImage(e.target.files[0])} 
-                  style={{ display: 'none' }} // Hides default input
+                  style={{ display: 'none' }} 
                 />
              </label>
              <span style={{fontSize:'0.75rem', color:'#64748b'}}>

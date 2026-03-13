@@ -3,20 +3,22 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
 
-// 🌟 THE FIX: Tell dotenv exactly where to find your .env file!
+// Tell dotenv exactly where to find your .env file
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const app = express();
 
 // --- MIDDLEWARE ---
 app.use(cors());
-app.use(express.json()); // Allows us to read JSON data from the frontend
 
-// Make the 'uploads' folder publicly accessible so Profile Pictures load correctly
+// 🌟 THE FIX: Increased payload limit to 50mb for large Excel imports
+app.use(express.json({ limit: '50mb' })); 
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// Make the 'uploads' folder publicly accessible so Profile Pictures and Documents load correctly
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // --- DATABASE CONNECTION ---
-// If dotenv loads correctly, this will grab your Atlas link!
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/alumni_directory';
 
 mongoose.connect(MONGO_URI)
@@ -29,14 +31,14 @@ mongoose.connect(MONGO_URI)
 // --- API ROUTES ---
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/alumni', require('./routes/alumniRoutes'));
-
-// 🌟 NEW: The dynamic settings/dropdown configuration route
 app.use('/api/config', require('./routes/config'));
 
+// ✅ ACTIVATED: Document repository routes
+app.use('/api/documents', require('./routes/documentRoutes'));
+
 // ⚠️ TEMPORARILY DISABLED: We will uncomment these as we build each feature!
-// app.use('/api/committee', require('./routes/committee'));
-// app.use('/api/events', require('./routes/events'));
-// app.use('/api/documents', require('./routes/documents'));
+// app.use('/api/committee', require('./routes/committeeRoutes'));
+// app.use('/api/events', require('./routes/eventRoutes'));
 
 // --- HEALTH CHECK ---
 app.get('/', (req, res) => {

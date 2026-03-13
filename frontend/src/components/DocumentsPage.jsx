@@ -25,7 +25,7 @@ const DocumentsPage = () => {
   return (
     <div style={{ padding: '50px 20px', maxWidth: '900px', margin: '0 auto', fontFamily: 'sans-serif' }}>
       <h1 style={{ color: '#003366', borderBottom: '3px solid #ffcc00', paddingBottom: '10px' }}>Documents & Resources</h1>
-      <p style={{ color: '#666', marginBottom: '30px' }}>Download official chapter documents, minutes, and circulars.</p>
+      <p style={{ color: '#666', marginBottom: '30px' }}>View official chapter documents, minutes, and circulars.</p>
       
       <div style={{ display: 'grid', gap: '15px' }}>
         {docs.length > 0 ? docs.map(doc => (
@@ -36,15 +36,17 @@ const DocumentsPage = () => {
                 Published on: {new Date(doc.createdAt).toLocaleDateString()}
               </div>
             </div>
+            
+            {/* 🌟 FIXED: Removed the 'download' attribute here */}
             <a 
               href={`${BACKEND_URL}${doc.fileUrl}`} 
               target="_blank" 
               rel="noreferrer" 
-              style={styles.btnDownload}
-              download
+              style={styles.btnView}
             >
               View Document
             </a>
+            
           </div>
         )) : (
           <div style={{ textAlign: 'center', padding: '40px', backgroundColor: '#f9f9f9', borderRadius: '10px' }}>
@@ -67,7 +69,8 @@ const styles = {
     boxShadow: '0 2px 8px rgba(0,0,0,0.05)', 
     border: '1px solid #eee' 
   },
-  btnDownload: { 
+  // I renamed this to btnView just to keep the CSS naming logical
+  btnView: { 
     backgroundColor: '#003366', 
     color: 'white', 
     textDecoration: 'none', 

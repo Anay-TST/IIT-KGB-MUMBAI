@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import api from '../../api';
+import api, { BACKEND_URL } from '../../api';
 
 const DocumentTab = ({ docs, refresh }) => {
   const [docTitle, setDocTitle] = useState('');
@@ -66,6 +66,7 @@ const DocumentTab = ({ docs, refresh }) => {
             <input 
               id="docFileInput"
               type="file" 
+              accept=".pdf,.doc,.docx" 
               onChange={e => setDocFile(e.target.files[0])} 
               style={styles.fileInput}
             />
@@ -93,7 +94,20 @@ const DocumentTab = ({ docs, refresh }) => {
                 <td style={styles.td}>
                   <strong>{d.title}</strong>
                 </td>
-                <td style={{ ...styles.td, textAlign: 'right' }}>
+                
+                <td style={{ ...styles.td, textAlign: 'right', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                  
+                  {/* 🌟 FIXED: Added the 'download' attribute back and changed text */}
+                  <a 
+                    href={`${BACKEND_URL}${d.fileUrl}`} 
+                    download
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    style={styles.btnDownload}
+                  >
+                    Download
+                  </a>
+
                   <button 
                     onClick={() => handleDelete(d._id)} 
                     style={styles.btnDelete}
@@ -101,6 +115,7 @@ const DocumentTab = ({ docs, refresh }) => {
                     Delete
                   </button>
                 </td>
+
               </tr>
             )) : (
               <tr>
@@ -159,6 +174,21 @@ const styles = {
   th: { padding: '18px', textAlign: 'left', backgroundColor: '#f8fafc', color: '#475569', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px' },
   td: { padding: '18px', borderBottom: '1px solid #f1f5f9', color: '#1e293b', fontSize: '0.95rem' },
   tr: { transition: '0.2s' },
+  
+  /* 🌟 RENAMED to btnDownload */
+  btnDownload: {
+    backgroundColor: '#e0f2fe',
+    color: '#0284c7',
+    border: 'none',
+    padding: '8px 16px',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontWeight: 'bold',
+    fontSize: '0.85rem',
+    textDecoration: 'none', 
+    display: 'inline-block'
+  },
+
   btnDelete: { 
     backgroundColor: '#fee2e2', 
     color: '#b91c1c', 
