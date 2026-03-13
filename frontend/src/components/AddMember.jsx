@@ -153,10 +153,36 @@ const AddMember = ({ refresh }) => {
           </div>
         </div>
 
-        {/* SECTION 5: PROFILE PICTURE */}
+        {/* SECTION 5: PROFILE PICTURE (UPGRADED UI) */}
         <div style={s.section}>5. Profile Picture</div>
-        <div style={{marginTop:'10px'}}>
-           <input type="file" accept="image/*" onChange={e => setImage(e.target.files[0])} style={{display:'block'}} />
+        <div style={{display:'flex', alignItems:'center', gap:'20px', marginTop:'10px', background:'#f8fafc', padding:'15px', borderRadius:'12px', border:'1px solid #e2e8f0'}}>
+           
+           {/* IMAGE PREVIEW LOGIC */}
+           {image ? (
+             <img src={URL.createObjectURL(image)} alt="New Selection" style={{width:'70px', height:'70px', borderRadius:'50%', objectFit:'cover', border:'2px solid #cbd5e1'}} />
+           ) : (
+             <div style={{width:'70px', height:'70px', borderRadius:'50%', backgroundColor:'#e2e8f0', display:'flex', alignItems:'center', justifyContent:'center', color:'#94a3b8', fontSize:'0.7rem', textAlign:'center', border:'2px dashed #cbd5e1'}}>No Photo</div>
+           )}
+
+           {/* CUSTOM FILE INPUT BUTTON */}
+           <div style={{display:'flex', flexDirection:'column', gap:'5px'}}>
+             <label style={{
+                padding: '8px 16px', background: '#fff', border: '1px solid #cbd5e1', 
+                borderRadius: '8px', color: '#001f3f', fontWeight: 'bold', fontSize: '0.85rem', 
+                cursor: 'pointer', textAlign: 'center', display: 'inline-block', boxShadow:'0 1px 2px rgba(0,0,0,0.05)'
+             }}>
+                {image ? 'Choose New File' : 'Select Profile Picture'}
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  onChange={e => setImage(e.target.files[0])} 
+                  style={{ display: 'none' }} // Hides default input
+                />
+             </label>
+             <span style={{fontSize:'0.75rem', color:'#64748b'}}>
+                {image ? image.name : 'No file chosen'}
+             </span>
+           </div>
         </div>
 
         <button type="submit" disabled={loading} style={s.btn}>
