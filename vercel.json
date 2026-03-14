@@ -8,7 +8,9 @@
     {
       "src": "frontend/package.json",
       "use": "@vercel/static-build",
-      "config": { "distDir": "dist" }
+      "config": {
+        "distDir": "dist"
+      }
     }
   ],
   "routes": [
@@ -22,14 +24,6 @@
     },
     {
       "handle": "filesystem"
-    },
-    {
-      "src": "/admin(.*)",
-      "dest": "/index.html"
-    },
-    {
-      "src": "/members(.*)",
-      "dest": "/index.html"
     },
     {
       "src": "/(.*)",
