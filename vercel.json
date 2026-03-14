@@ -8,11 +8,9 @@
     {
       "src": "frontend/package.json",
       "use": "@vercel/static-build",
-      "config": { "distDir": "dist" }
-    },
-    {
-      "src": "backend/uploads/**",
-      "use": "@vercel/static"
+      "config": {
+        "distDir": "dist"
+      }
     }
   ],
   "routes": [
@@ -22,7 +20,7 @@
     },
     {
       "src": "/uploads/(.*)",
-      "dest": "backend/uploads/$1"
+      "dest": "backend/server.js"
     },
     {
       "handle": "filesystem"
