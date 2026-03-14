@@ -18,6 +18,10 @@
       }
     },
     {
+      "src": "/admin(.*)",
+      "dest": "/index.html"
+    },
+    {
       "src": "/(.*)",
       "dest": "backend/server.js"
     }
