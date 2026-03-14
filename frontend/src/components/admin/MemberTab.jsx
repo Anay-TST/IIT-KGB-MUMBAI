@@ -72,6 +72,19 @@ const MemberTab = ({ members, refresh }) => {
     finally { setLoading(false); }
   };
 
+  // 🌟 THE UPGRADED SAFETY NET: Now guarantees strict alphabetical sorting
+  const getSafeOptions = (configArray, currentValue) => {
+    let finalArray = configArray || [];
+    
+    // 1. Add the legacy item if it's missing
+    if (currentValue && !finalArray.includes(currentValue)) {
+      finalArray = [...finalArray, currentValue];
+    }
+    
+    // 2. Force an alphabetical sort right before sending it to the dropdown
+    return [...finalArray].sort((a, b) => a.localeCompare(b));
+  };
+
   return (
     <div style={styles.container}>
       <div style={styles.header}>
@@ -155,16 +168,19 @@ const MemberTab = ({ members, refresh }) => {
                 </div>
 
                 <div style={styles.field}><label style={styles.label}>Birthdate</label><input type="date" value={formatDateForInput(editData.birthdate)} onChange={e => setEditData({...editData, birthdate: e.target.value})} style={styles.input} /></div>
-                <div style={styles.field}><label style={styles.label}>Sex</label><select value={editData.sex || ''} onChange={e => setEditData({...editData, sex: e.target.value})} style={styles.input}><option value="">Select...</option>{options.genders.map(g => <option key={g} value={g}>{g}</option>)}</select></div>
-                <div style={styles.field}><label style={styles.label}>Marital Status</label><select value={editData.maritalStatus || ''} onChange={e => setEditData({...editData, maritalStatus: e.target.value})} style={styles.input}><option value="">Select...</option>{options.maritalStatuses.map(m => <option key={m} value={m}>{m}</option>)}</select></div>
+                
+                <div style={styles.field}><label style={styles.label}>Sex</label><select value={editData.sex || ''} onChange={e => setEditData({...editData, sex: e.target.value})} style={styles.input}><option value="">Select...</option>{getSafeOptions(options.genders, editData.sex).map(g => <option key={g} value={g}>{g}</option>)}</select></div>
+                <div style={styles.field}><label style={styles.label}>Marital Status</label><select value={editData.maritalStatus || ''} onChange={e => setEditData({...editData, maritalStatus: e.target.value})} style={styles.input}><option value="">Select...</option>{getSafeOptions(options.maritalStatuses, editData.maritalStatus).map(m => <option key={m} value={m}>{m}</option>)}</select></div>
+                
                 <div style={styles.field}><label style={styles.label}>Referred By</label><input value={editData.referredBy || ''} onChange={e => setEditData({...editData, referredBy: e.target.value})} style={styles.input} /></div>
               </div>
 
               <h4 style={styles.sectionTitle}>2. Academic & Profession</h4>
               <div style={styles.formGrid}>
-                <div style={styles.field}><label style={styles.label}>Degree</label><select value={editData.degree || ''} onChange={e => setEditData({...editData, degree: e.target.value})} style={styles.input}><option value="">Select...</option>{options.degrees.map(o => <option key={o} value={o}>{o}</option>)}</select></div>
-                <div style={styles.field}><label style={styles.label}>Department</label><select value={editData.department || ''} onChange={e => setEditData({...editData, department: e.target.value})} style={styles.input}><option value="">Select...</option>{options.departments.map(o => <option key={o} value={o}>{o}</option>)}</select></div>
-                <div style={styles.field}><label style={styles.label}>Hall</label><select value={editData.hall || ''} onChange={e => setEditData({...editData, hall: e.target.value})} style={styles.input}><option value="">Select...</option>{options.halls.map(o => <option key={o} value={o}>{o}</option>)}</select></div>
+                <div style={styles.field}><label style={styles.label}>Degree</label><select value={editData.degree || ''} onChange={e => setEditData({...editData, degree: e.target.value})} style={styles.input}><option value="">Select...</option>{getSafeOptions(options.degrees, editData.degree).map(o => <option key={o} value={o}>{o}</option>)}</select></div>
+                <div style={styles.field}><label style={styles.label}>Department</label><select value={editData.department || ''} onChange={e => setEditData({...editData, department: e.target.value})} style={styles.input}><option value="">Select...</option>{getSafeOptions(options.departments, editData.department).map(o => <option key={o} value={o}>{o}</option>)}</select></div>
+                <div style={styles.field}><label style={styles.label}>Hall</label><select value={editData.hall || ''} onChange={e => setEditData({...editData, hall: e.target.value})} style={styles.input}><option value="">Select...</option>{getSafeOptions(options.halls, editData.hall).map(o => <option key={o} value={o}>{o}</option>)}</select></div>
+                
                 <div style={styles.field}><label style={styles.label}>Batch (Year)</label><input type="number" value={editData.yearOfGraduation || ''} onChange={e => setEditData({...editData, yearOfGraduation: e.target.value})} style={styles.input} /></div>
                 <div style={styles.field}><label style={styles.label}>Current Occupation</label><input value={editData.currentOccupation || ''} onChange={e => setEditData({...editData, currentOccupation: e.target.value})} style={styles.input} /></div>
               </div>
@@ -192,7 +208,6 @@ const MemberTab = ({ members, refresh }) => {
                    <label style={{fontWeight:'bold', fontSize:'0.85rem'}}>Life Member</label>
                 </div>
                 
-                {/* UPGRADED IMAGE UPLOAD UI */}
                 <div style={{gridColumn:'span 2', background:'#f8fafc', padding:'15px', borderRadius:'12px', border:'1px solid #e2e8f0'}}>
                   <label style={styles.label}>Update Profile Photo</label>
                   <div style={{display:'flex', alignItems:'center', gap:'20px', marginTop:'10px'}}>

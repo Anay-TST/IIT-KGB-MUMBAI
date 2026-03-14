@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
 
-const AddMember = ({ refresh }) => {
+const AddMember = ({ refresh, onClose }) => {
   const initialState = {
     firstName: '', lastName: '', email: '', countryCode: '+91', mobile: '', birthdate: '',
     sex: '', maritalStatus: '', degree: '', department: '', hall: '', yearOfGraduation: '',
@@ -53,11 +53,24 @@ const AddMember = ({ refresh }) => {
       setFormData(initialState);
       setImage(null);
       if (refresh) refresh();
+      
+      // Close the form automatically on success
+      if (onClose) onClose(); 
+
     } catch (err) {
       alert(err.response?.data?.message || "Registration failed");
     } finally {
       setLoading(false);
     }
+  };
+
+  // 🌟 THE UPGRADED SAFETY NET: Sorts the list alphabetically for new users
+  const getSafeOptions = (configArray, currentValue) => {
+    let finalArray = configArray || [];
+    if (currentValue && !finalArray.includes(currentValue)) {
+      finalArray = [...finalArray, currentValue];
+    }
+    return [...finalArray].sort((a, b) => a.localeCompare(b));
   };
 
   return (
@@ -84,13 +97,15 @@ const AddMember = ({ refresh }) => {
           <div style={s.field}>
             <label style={s.label}>Sex</label>
             <select name="sex" value={formData.sex} onChange={handleChange} style={s.input} required>
-              <option value="">Select...</option>{options.genders.map(g => <option key={g} value={g}>{g}</option>)}
+              <option value="">Select...</option>
+              {getSafeOptions(options.genders, formData.sex).map(g => <option key={g} value={g}>{g}</option>)}
             </select>
           </div>
           <div style={s.field}>
             <label style={s.label}>Marital Status</label>
             <select name="maritalStatus" value={formData.maritalStatus} onChange={handleChange} style={s.input}>
-              <option value="">Select...</option>{options.maritalStatuses.map(m => <option key={m} value={m}>{m}</option>)}
+              <option value="">Select...</option>
+              {getSafeOptions(options.maritalStatuses, formData.maritalStatus).map(m => <option key={m} value={m}>{m}</option>)}
             </select>
           </div>
         </div>
@@ -101,19 +116,22 @@ const AddMember = ({ refresh }) => {
           <div style={s.field}>
             <label style={s.label}>Degree</label>
             <select name="degree" value={formData.degree} onChange={handleChange} style={s.input}>
-              <option value="">Select...</option>{options.degrees.map(d => <option key={d} value={d}>{d}</option>)}
+              <option value="">Select...</option>
+              {getSafeOptions(options.degrees, formData.degree).map(d => <option key={d} value={d}>{d}</option>)}
             </select>
           </div>
           <div style={s.field}>
             <label style={s.label}>Department</label>
             <select name="department" value={formData.department} onChange={handleChange} style={s.input}>
-              <option value="">Select...</option>{options.departments.map(d => <option key={d} value={d}>{d}</option>)}
+              <option value="">Select...</option>
+              {getSafeOptions(options.departments, formData.department).map(d => <option key={d} value={d}>{d}</option>)}
             </select>
           </div>
           <div style={s.field}>
             <label style={s.label}>Hall of Residence</label>
             <select name="hall" value={formData.hall} onChange={handleChange} style={s.input}>
-              <option value="">Select...</option>{options.halls.map(h => <option key={h} value={h}>{h}</option>)}
+              <option value="">Select...</option>
+              {getSafeOptions(options.halls, formData.hall).map(h => <option key={h} value={h}>{h}</option>)}
             </select>
           </div>
           <div style={s.field}><label style={s.label}>Graduation Year</label><input name="yearOfGraduation" type="number" value={formData.yearOfGraduation} onChange={handleChange} style={s.input} /></div>
@@ -136,7 +154,6 @@ const AddMember = ({ refresh }) => {
           
           <div style={s.field}><label style={s.label}>Referred By</label><input name="referredBy" value={formData.referredBy} onChange={handleChange} style={s.input} /></div>
           
-          {/* 🌟 LOCKED LIFE MEMBER FIELDS - CLEANED UP */}
           <div style={s.field}>
             <label style={s.label}>Life Member No.</label>
             <input 

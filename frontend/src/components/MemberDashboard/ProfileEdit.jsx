@@ -95,6 +95,15 @@ const ProfileEdit = () => {
     }
   };
 
+  // 🌟 THE UPGRADED SAFETY NET: Preserves legacy data AND guarantees strict alphabetical sorting
+  const getSafeOptions = (configArray, currentValue) => {
+    let finalArray = configArray || [];
+    if (currentValue && !finalArray.includes(currentValue)) {
+      finalArray = [...finalArray, currentValue];
+    }
+    return [...finalArray].sort((a, b) => a.localeCompare(b));
+  };
+
   if (loading) return <div style={{padding:'50px', textAlign:'center', color:'#001f3f'}}>Loading your profile...</div>;
 
   return (
@@ -109,7 +118,6 @@ const ProfileEdit = () => {
           <div style={s.field}><label style={s.label}>Last Name</label><input name="lastName" value={formData.lastName || ''} onChange={handleChange} style={s.input} /></div>
           <div style={s.field}><label style={s.label}>Email Address</label><input name="email" type="email" value={formData.email || ''} onChange={handleChange} style={s.input} /></div>
           
-          {/* MOBILE FIELDS */}
           <div style={s.field}>
              <label style={s.label}>Mobile (Code + Number)</label>
              <div style={{display:'flex', gap:'10px'}}>
@@ -131,16 +139,19 @@ const ProfileEdit = () => {
           </div>
 
           <div style={s.field}><label style={s.label}>Birthdate</label><input name="birthdate" type="date" value={formatDate(formData.birthdate)} onChange={handleChange} style={s.input} /></div>
+          
           <div style={s.field}>
             <label style={s.label}>Sex</label>
             <select name="sex" value={formData.sex || ''} onChange={handleChange} style={s.input}>
-              <option value="">Select...</option>{options.genders.map(g => <option key={g} value={g}>{g}</option>)}
+              <option value="">Select...</option>
+              {getSafeOptions(options.genders, formData.sex).map(g => <option key={g} value={g}>{g}</option>)}
             </select>
           </div>
           <div style={s.field}>
             <label style={s.label}>Marital Status</label>
             <select name="maritalStatus" value={formData.maritalStatus || ''} onChange={handleChange} style={s.input}>
-              <option value="">Select...</option>{options.maritalStatuses.map(m => <option key={m} value={m}>{m}</option>)}
+              <option value="">Select...</option>
+              {getSafeOptions(options.maritalStatuses, formData.maritalStatus).map(m => <option key={m} value={m}>{m}</option>)}
             </select>
           </div>
         </div>
@@ -151,19 +162,22 @@ const ProfileEdit = () => {
           <div style={s.field}>
             <label style={s.label}>Degree</label>
             <select name="degree" value={formData.degree || ''} onChange={handleChange} style={s.input}>
-              <option value="">Select...</option>{options.degrees.map(d => <option key={d} value={d}>{d}</option>)}
+              <option value="">Select...</option>
+              {getSafeOptions(options.degrees, formData.degree).map(d => <option key={d} value={d}>{d}</option>)}
             </select>
           </div>
           <div style={s.field}>
             <label style={s.label}>Department</label>
             <select name="department" value={formData.department || ''} onChange={handleChange} style={s.input}>
-              <option value="">Select...</option>{options.departments.map(d => <option key={d} value={d}>{d}</option>)}
+              <option value="">Select...</option>
+              {getSafeOptions(options.departments, formData.department).map(d => <option key={d} value={d}>{d}</option>)}
             </select>
           </div>
           <div style={s.field}>
             <label style={s.label}>Hall of Residence</label>
             <select name="hall" value={formData.hall || ''} onChange={handleChange} style={s.input}>
-              <option value="">Select...</option>{options.halls.map(h => <option key={h} value={h}>{h}</option>)}
+              <option value="">Select...</option>
+              {getSafeOptions(options.halls, formData.hall).map(h => <option key={h} value={h}>{h}</option>)}
             </select>
           </div>
           <div style={s.field}><label style={s.label}>Graduation Year</label><input name="yearOfGraduation" type="number" value={formData.yearOfGraduation || ''} onChange={handleChange} style={s.input} /></div>
@@ -184,11 +198,32 @@ const ProfileEdit = () => {
         <div style={s.grid}>
           <div style={s.field}><label style={s.label}>Current Occupation</label><input name="currentOccupation" value={formData.currentOccupation || ''} onChange={handleChange} style={s.input} /></div>
           <div style={s.field}><label style={s.label}>Referred By</label><input name="referredBy" value={formData.referredBy || ''} onChange={handleChange} style={s.input} /></div>
-          <div style={s.field}><label style={s.label}>Life Member No.</label><input name="lifeMemberNumber" value={formData.lifeMemberNumber || ''} onChange={handleChange} style={s.input} /></div>
-          <div style={{display:'flex', alignItems:'center', gap:'10px', marginTop:'20px'}}>
-             <input name="isLifeMember" type="checkbox" checked={formData.isLifeMember || false} onChange={handleChange} style={{width:'18px', height:'18px'}} />
-             <label style={{fontWeight:'bold', fontSize:'0.85rem'}}>Life Member</label>
+          
+          {/* LOCKED LIFE MEMBER FIELDS */}
+          <div style={s.field}>
+            <label style={s.label}>Life Member No.</label>
+            <input 
+              name="lifeMemberNumber" 
+              value={formData.lifeMemberNumber || ''} 
+              onChange={handleChange} 
+              style={{...s.input, backgroundColor: '#f1f5f9', cursor: 'not-allowed', color: '#94a3b8'}} 
+              disabled 
+              title="Life membership is assigned by admin"
+            />
           </div>
+          <div style={{display:'flex', alignItems:'center', gap:'10px', marginTop:'20px'}}>
+             <input 
+               name="isLifeMember" 
+               type="checkbox" 
+               checked={formData.isLifeMember || false} 
+               onChange={handleChange} 
+               style={{width:'18px', height:'18px', cursor: 'not-allowed'}} 
+               disabled 
+               title="Life membership is assigned by admin"
+             />
+             <label style={{fontWeight:'bold', fontSize:'0.85rem', color: '#94a3b8'}}>Life Member</label>
+          </div>
+
           <div style={{gridColumn:'span 2'}}>
             <label style={s.label}>Office Address</label>
             <textarea name="officeAddress" value={formData.officeAddress || ''} onChange={handleChange} style={s.textarea} />
@@ -199,18 +234,16 @@ const ProfileEdit = () => {
           </div>
         </div>
 
-        {/* SECTION 5: PROFILE PICTURE (UPDATED) */}
+        {/* SECTION 5: PROFILE PICTURE */}
         <div style={s.section}>5. Profile Picture</div>
         <div style={{display:'flex', alignItems:'center', gap:'20px', marginTop:'10px'}}>
            
-           {/* IMAGE PREVIEW LOGIC */}
            {image ? (
              <img src={URL.createObjectURL(image)} alt="New Selection" style={{width:'70px', height:'70px', borderRadius:'50%', objectFit:'cover', border:'2px solid #cbd5e1'}} />
            ) : formData.profilePic ? (
              <img src={`${BACKEND_URL}${formData.profilePic}`} alt="Current" style={{width:'70px', height:'70px', borderRadius:'50%', objectFit:'cover', border:'2px solid #cbd5e1'}} />
            ) : null}
 
-           {/* CUSTOM FILE INPUT BUTTON */}
            <div style={{display:'flex', flexDirection:'column', gap:'5px'}}>
              <label style={{
                 padding: '8px 16px', background: '#f8fafc', border: '1px solid #cbd5e1', 
@@ -222,7 +255,7 @@ const ProfileEdit = () => {
                   type="file" 
                   accept="image/*" 
                   onChange={e => setImage(e.target.files[0])} 
-                  style={{ display: 'none' }} // Hides the ugly default input
+                  style={{ display: 'none' }} 
                 />
              </label>
              <span style={{fontSize:'0.75rem', color:'#64748b'}}>

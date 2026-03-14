@@ -17,13 +17,22 @@ const CommitteeTab = ({ committee, members, refresh }) => {
       return alert("Please select a valid member from the dropdown suggestions and enter a role.");
     }
 
-    // Send the correct _id to your backend
-    await api.post('/api/committee', { memberId: selectedMember._id, title, order: committee.length });
-    
-    // Clear the form
-    setTitle(''); 
-    setSearchTerm(''); 
-    refresh();
+    // 🌟 FIXED: Added a try/catch block so the app alerts you if the server rejects it
+    try {
+      await api.post('/api/committee', { 
+        memberId: selectedMember._id, 
+        title, 
+        order: committee.length 
+      });
+      
+      // Clear the form only if successful
+      setTitle(''); 
+      setSearchTerm(''); 
+      refresh();
+    } catch (err) {
+      console.error("Committee Add Error:", err);
+      alert(err.response?.data?.message || "Failed to add member to committee. Is the backend route enabled?");
+    }
   };
 
   const move = async (index, dir) => {
@@ -32,8 +41,15 @@ const CommitteeTab = ({ committee, members, refresh }) => {
     if (target < 0 || target >= newItems.length) return;
     
     [newItems[index], newItems[target]] = [newItems[target], newItems[index]];
-    await api.patch('/api/committee/reorder', { orders: newItems.map((item, idx) => ({ id: item._id, order: idx })) });
-    refresh();
+    
+    try {
+      await api.patch('/api/committee/reorder', { 
+        orders: newItems.map((item, idx) => ({ id: item._id, order: idx })) 
+      });
+      refresh();
+    } catch (err) {
+      alert("Failed to reorder committee.");
+    }
   };
 
   return (
@@ -52,7 +68,6 @@ const CommitteeTab = ({ committee, members, refresh }) => {
             style={{ ...styles.input, width: '100%', boxSizing: 'border-box' }}
           />
           
-          {/* THE FIX: Added && m.isLifeMember to the filter below! */}
           <datalist id="approved-members-list">
             {members.filter(m => m.isApproved && m.isLifeMember).map(m => (
               <option 
@@ -93,7 +108,16 @@ const CommitteeTab = ({ committee, members, refresh }) => {
                 <td style={styles.td}>{c.member?.firstName} {c.member?.lastName}</td>
                 <td style={styles.td}><strong>{c.title}</strong></td>
                 <td style={styles.td}>
-                  <button onClick={() => api.delete(`/api/committee/${c._id}`).then(refresh)} style={styles.btnDelete}>Remove</button>
+                  <button 
+                    onClick={() => {
+                      if(window.confirm("Remove this member from the committee?")) {
+                        api.delete(`/api/committee/${c._id}`).then(refresh).catch(() => alert("Failed to delete"));
+                      }
+                    }} 
+                    style={styles.btnDelete}
+                  >
+                    Remove
+                  </button>
                 </td>
               </tr>
             ))}

@@ -11,11 +11,11 @@ const app = express();
 // --- MIDDLEWARE ---
 app.use(cors());
 
-// 🌟 THE FIX: Increased payload limit to 50mb for large Excel imports
+// INCREASED LIMITS: For handling large Excel bulk imports and high-res profile pictures
 app.use(express.json({ limit: '50mb' })); 
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// Make the 'uploads' folder publicly accessible so Profile Pictures and Documents load correctly
+// Make the 'uploads' folder publicly accessible
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // --- DATABASE CONNECTION ---
@@ -31,14 +31,10 @@ mongoose.connect(MONGO_URI)
 // --- API ROUTES ---
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/alumni', require('./routes/alumniRoutes'));
-app.use('/api/config', require('./routes/config'));
-
-// ✅ ACTIVATED: Document repository routes
+app.use('/api/config', require('./routes/config')); // <-- Config route active!
 app.use('/api/documents', require('./routes/documentRoutes'));
-
-// ⚠️ TEMPORARILY DISABLED: We will uncomment these as we build each feature!
-// app.use('/api/committee', require('./routes/committeeRoutes'));
-// app.use('/api/events', require('./routes/eventRoutes'));
+app.use('/api/committee', require('./routes/committeeRoutes')); 
+app.use('/api/events', require('./routes/eventRoutes')); 
 
 // --- HEALTH CHECK ---
 app.get('/', (req, res) => {

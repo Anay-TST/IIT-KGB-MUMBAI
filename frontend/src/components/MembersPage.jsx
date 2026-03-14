@@ -53,7 +53,11 @@ const MembersPage = () => {
       {showRegisterForm && (
         <div style={styles.formContainer}>
            <div style={styles.formCard}>
-              <AddMember onSuccess={handleRegistrationSuccess} />
+              {/* 🌟 FIXED: Mapped to the exact props AddMember is looking for */}
+              <AddMember 
+                refresh={handleRegistrationSuccess} 
+                onClose={() => setShowRegisterForm(false)} 
+              />
            </div>
         </div>
       )}
