@@ -6,28 +6,18 @@
       "use": "@vercel/node"
     }
   ],
-  "routes": [
+  "rewrites": [
     {
-      "src": "/api/(.*)",
-      "dest": "backend/server.js",
-      "headers": {
-        "Access-Control-Allow-Origin": "https://iitkgpmumbai.in",
-        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-        "Access-Control-Allow-Headers": "X-Requested-With, Content-Type, Accept, Authorization",
-        "Access-Control-Allow-Credentials": "true"
-      }
+      "source": "/api/(.*)",
+      "destination": "backend/server.js"
     },
     {
-      "src": "/admin(.*)",
-      "dest": "/index.html"
+      "source": "/admin(.*)",
+      "destination": "/"
     },
     {
-      "src": "/assets/(.*)",
-      "dest": "/assets/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "backend/server.js"
+      "source": "/((?!api/).*)",
+      "destination": "/"
     }
   ]
 }
