@@ -18,11 +18,8 @@
       }
     },
     {
-      "handle": "filesystem"
-    },
-    {
       "src": "/(.*)",
-      "dest": "/index.html"
+      "dest": "backend/server.js"
     }
   ]
 }
