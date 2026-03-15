@@ -1,17 +1,21 @@
 import axios from 'axios';
 
+// We trim any trailing slash from the URL to prevent "https://site.com//api" errors
+const rawUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const cleanUrl = rawUrl.replace(/\/$/, ""); 
+
 /**
- * BACKEND_URL logic:
- * 1. In Production (Vercel): Uses the URL you just set in Environment Variables.
- * 2. In Local Dev: Falls back to your local Node server port.
+ * By adding /api here, you don't have to type it in every component.
+ * Your images will still use cleanUrl + '/uploads/...'
  */
-export const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+export const BACKEND_URL = cleanUrl;
+export const API_URL = `${cleanUrl}/api`;
 
 const api = axios.create({
-  baseURL: BACKEND_URL,
+  baseURL: API_URL,
 });
 
-// Request Interceptor: Automatically attaches the login token to every API call
+// Request Interceptor
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('memberToken');
@@ -20,18 +24,17 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// Response Interceptor: Helpful for catching global errors (like an expired session)
+// Response Interceptor
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // If the backend says 'Unauthorized', you could trigger a logout here
     if (error.response && error.response.status === 401) {
-      console.warn("Session expired or unauthorized. Please log in again.");
+      console.warn("Session expired. Redirecting to login...");
+      // Optional: localStorage.removeItem('memberToken');
+      // Optional: window.location.href = '/login';
     }
     return Promise.reject(error);
   }
